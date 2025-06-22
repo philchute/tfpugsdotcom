@@ -1,0 +1,143 @@
+@page
+@model tfpugsdotcom.Pages.LeaderboardsModel
+@using tfpugsdotcom.Models.ApiResponses
+@{
+    ViewData["Title"] = "Leaderboards";
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">Leaderboards</h1>
+
+    <form method="get" class="mb-4 p-3 border rounded bg-light text-dark">
+        <input type="hidden" name="CurrentPage" value="1" />
+        <input type="hidden" asp-for="PageSize" />
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md">
+                <label asp-for="SelectedGameId" class="form-label fw-bold">Game</label>
+                <select asp-for="SelectedGameId" asp-items="Model.GameOptions" class="form-select form-select-sm" onchange="this.form.submit()"></select>
+            </div>
+            <div class="col-md">
+                <label asp-for="Metric" class="form-label fw-bold">Metric</label>
+                <select asp-for="Metric" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="elo">Elo</option>
+                    @if (Model.SelectedParticipantType == "player")
+                    {
+                        <option value="gems">Gems</option>
+                        <option value="xp">XP</option>
+                        <option value="achievements">Achievements</option>
+                    }
+                    <option value="wins">Wins</option>
+                    <option value="matches_played">Matches Played</option>
+                </select>
+            </div>
+            <div class="col-md">
+                <label asp-for="NameLike" class="form-label fw-bold">Player/Team Name</label>
+                <input asp-for="NameLike" type="text" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-auto">
+                <div class="form-label fw-bold">View</div>
+                <div class="btn-group">
+                    <a asp-page="/Leaderboards" asp-all-route-data="Model.GetRouteData(1)" asp-route-CurrentFilter="overall" class="btn btn-sm @(Model.CurrentFilter == "overall" ? "btn-primary" : "btn-outline-primary")">Overall</a>
+                    <a asp-page="/Leaderboards" asp-all-route-data="Model.GetRouteData(1)" asp-route-CurrentFilter="active" class="btn btn-sm @(Model.CurrentFilter == "active" ? "btn-primary" : "btn-outline-primary")">Active</a>
+                </div>
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-info btn-sm w-100">Filter</button>
+            </div>
+            <div class="col-md-auto">
+                <a asp-page="/Leaderboards" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th class="text-center">Active Rank</th>
+                        <th class="text-center">Overall Rank</th>
+                        <th>Name</th>
+                        <th class="text-center">ELO</th>
+                        <th class="text-center">Gems</th>
+                        <th class="text-center">XP</th>
+                        <th class="text-center">Achievements</th>
+                        <th class="text-center">Wins</th>
+                        <th class="text-center">Losses</th>
+                        <th class="text-center">Draws</th>
+                        <th class="text-center">Win %</th>
+                        <th class="text-center">Matches</th>
+                        <th class="text-center">Last Played</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ItemsToDisplay)
+                    {
+                        var link = Model.SelectedParticipantType == "team"
+                            ? $"/teams/{item.Id}"
+                            : $"/players/{item.Id}";
+                        <tr class="@(item.IsActive == true ? "" : "table-secondary text-muted")">
+                            <td class="text-center">@(item.ActiveRank?.ToString() ?? "-")</td>
+                            <td class="text-center">@(item.Rank?.ToString() ?? "-")</td>
+                            <td>
+                                <a href="@link">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.Name" class="avatar-sm me-2" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(item.AvatarDisplayString))
+                                    {
+                                        <span class="me-2" style="width: 24px; display: inline-block; text-align: center; vertical-align: middle;">@Html.Raw(item.AvatarDisplayString)</span>
+                                    }
+                                    @item.Name
+                                </a>
+                            </td>
+                            <td class="text-center">@item.Elo?.ToString("N0")</td>
+                            <td class="text-center">@(Model.SelectedParticipantType == "player" ? item.Gems?.ToString("N0") : "-")</td>
+                            <td class="text-center">@(Model.SelectedParticipantType == "player" ? item.Xp?.ToString("N0") : "-")</td>
+                            <td class="text-center">@(Model.SelectedParticipantType == "player" ? item.AchievementCount?.ToString("N0") : "-")</td>
+                            <td class="text-center">@item.Wins.ToString("N0")</td>
+                            <td class="text-center">@item.Losses.ToString("N0")</td>
+                            <td class="text-center">@item.Draws.ToString("N0")</td>
+                            <td class="text-center">@(item.WinPercentage.HasValue ? $"{item.WinPercentage:F2}%" : "N/A")</td>
+                            <td class="text-center">@item.MatchesPlayed.ToString("N0")</td>
+                            <td class="text-center">@(item.LastPlayed.HasValue ? item.LastPlayed.Value.ToShortDateString() : "Never")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item"><a class="page-link" asp-all-route-data="Model.GetRouteData(Model.CurrentPage - 1)">Previous</a></li>
+                        }
+
+                        @for (var i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-all-route-data="Model.GetRouteData(i)">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item"><a class="page-link" asp-all-route-data="Model.GetRouteData(Model.CurrentPage + 1)">Next</a></li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+</div>

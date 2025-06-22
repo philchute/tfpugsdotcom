@@ -1,0 +1,18 @@
+@page "/RunnersGuide"
+@model tfpugsdotcom.Pages.RunnersGuideModel
+@{
+    // The ViewData["Title"] is now set in the base class
+}
+
+<div class="container mt-4">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    else
+    {
+        <div class="markdown-content">
+            @Html.Raw(Model.ContentAsHtml)
+        </div>
+    }
+</div> 

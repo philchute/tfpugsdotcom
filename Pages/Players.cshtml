@@ -1,0 +1,518 @@
+@page "/Players/{Id}"
+@model tfpugsdotcom.Pages.PlayersModel
+@using tfpugsdotcom.Models
+@using System.Globalization
+
+@{
+    ViewData["Title"] = Model.ProfileData != null ? $"{Model.ProfileData.Name}'s Profile" : "Player Profile";
+    var currentPlayerDiscordId = Model.Id;
+}
+
+<div class="container mt-4">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger text-center">@Model.ErrorMessage</div>
+    }
+    else
+    {
+        <h1 class="page-title">@ViewData["Title"]</h1>
+
+        if (Model.ProfileData != null)
+        {
+            <div class="mb-5">
+                <!-- Player Info Card -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-info p-2 me-2" style="font-size: 1rem;">
+                                @(Model.ProfileData.Gems?.ToString("N0") ?? "0") 💎
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.ProfileData.AvatarUrl))
+                            {
+                                <img src="@Model.ProfileData.AvatarUrl" alt="Avatar" class="rounded-circle me-3" style="width: 64px; height: 64px;" />
+                            }
+                            else if (!string.IsNullOrEmpty(Model.ProfileData.AvatarDisplayString))
+                            {
+                                <span class="me-3" style="font-size: 2.5rem;">@Html.Raw(Model.ProfileData.AvatarDisplayString)</span>
+                            }
+                            <span class="badge bg-info p-2" style="font-size: 1rem;">
+                                @(Model.ProfileData.Xp?.ToString("N0") ?? "0") ⚡
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements Section -->
+            <h3 class="mt-5 text-center">Achievements</h3>
+            <hr />
+            @if (Model.ProfileData.Achievements != null && Model.ProfileData.Achievements.Any())
+            {
+                <div class="row">
+                    @foreach (var ach in Model.ProfileData.Achievements.OrderByDescending(a => a.UnlockedAt))
+                    {
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100 shadow">
+                                <div class="card-header d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(ach.IconUrl))
+                                    {
+                                        <img src="@ach.IconUrl" alt="@ach.Name" style="height: 24px; width: 24px; margin-right: 10px;" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(ach.DisplayValue))
+                                    {
+                                        <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
+                                    }
+                                    <h5 class="mb-0">@ach.Name</h5>
+                                    @if(!string.IsNullOrEmpty(ach.GameId))
+                                    {
+                                        <span class="ms-auto text-muted small">@ach.GameId</span>
+                                    }
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">@ach.Description</p>
+                                </div>
+                                <div class="card-footer text-muted small d-flex justify-content-end">
+                                    <span>Awarded: @ach.UnlockedAt.ToString("yyyy-MM-dd")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p>This player has not unlocked any achievements yet.</p>
+            }
+
+            <!-- Game Statistics & ELO History -->
+            <h3 class="mt-5 text-center">Game Statistics & ELO History</h3>
+            <hr />
+            @if (Model.ProfileData.GameSpecificStats != null && Model.ProfileData.GameSpecificStats.Any())
+            {
+                foreach (var gameStats in Model.ProfileData.GameSpecificStats.OrderBy(gs => gs.GameId))
+                {
+                    <div class="card mt-3 mb-4 shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4>@gameStats.GameId</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-7"> @* ELO History (Graph will go here) *@
+                                    <h5>ELO History</h5>
+                                    @if (Model.EloHistories.TryGetValue(gameStats.GameId, out var eloHistory) && eloHistory != null)
+                                    {
+                                        if (eloHistory.History.Any())
+                                        {
+                                            <div style="position: relative; height: 300px; width: 100%;">  @* Wrapper for chart canvas *@
+                                                <canvas id="eloChart-@gameStats.GameId.Replace(" ", "-").ToLower()"></canvas>
+                                            </div>
+                                            <p class="text-center small mt-2">ELO graph for @gameStats.GameId will be displayed here.</p>
+                                            @* Placeholder for script to render chart, will be added later in _Layout or page specific script section
+                                            <script>
+                                                // Logic to render chart for @gameStats.GameId using eloHistory.History (note: JS will use lowercase 'history' based on serialization)
+                                            </script>
+                                            *@
+                                        }
+                                        else
+                                        {
+                                            <p>No ELO history available to display a graph for @gameStats.GameId.</p>
+                                        }
+                                    }
+                                    else if (Model.EloHistoryErrorMessages.TryGetValue(gameStats.GameId, out var specificErrorMessage) && !string.IsNullOrEmpty(specificErrorMessage))
+                                    {
+                                        <div class="alert alert-warning">@specificErrorMessage</div>
+                                    }
+                                    else
+                                    {
+                                        <p>ELO history not loaded or an unknown error occurred for @gameStats.GameId.</p>
+                                    }
+                                </div>
+                                <div class="col-md-5"> @* Player Stats *@
+                                    <h5>Player Stats</h5>
+                                    <ul class="list-unstyled">
+                                        <li><strong>ELO:</strong> @gameStats.Elo</li>
+                                        <li><strong>Rank:</strong> @(gameStats.Rank.HasValue ? gameStats.Rank.Value.ToString() : "N/A")</li>
+                                        <li><strong>Wins:</strong> @gameStats.Wins</li>
+                                        <li><strong>Losses:</strong> @gameStats.Losses</li>
+                                        <li><strong>Draws:</strong> @gameStats.Draws</li>
+                                        <li><strong>Matches Played:</strong> @gameStats.MatchesPlayed</li>
+                                        <li><strong>Win Percentage:</strong> @(gameStats.WinPercentage.HasValue ? $"{gameStats.WinPercentage.Value:F1}%" : "N/A")</li>
+                                        <li><strong>Last Played:</strong> @gameStats.LastPlayed.ToLocalTime().ToString("yyyy-MM-dd HH:mm (zzz)")</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-center">No game-specific statistics available for this player.</p>
+            }
+
+            <!-- Match History -->
+            <h3 class="mt-5 text-center">Match History</h3>
+            <hr />
+            <form method="get" class="mb-3 p-3 border rounded bg-light">
+                <input type="hidden" asp-for="Id" />
+                <div class="row g-2 align-items-end">
+                    <div class="col-md">
+                        <label asp-for="GameId" class="form-label fw-bold">Game</label>
+                        <select asp-for="GameId" asp-items="Model.GameIdOptions" class="form-select form-select-sm"></select>
+                    </div>
+                    <div class="col-md">
+                        <label asp-for="MapNameLike" class="form-label fw-bold">Map</label>
+                        <input asp-for="MapNameLike" type="text" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-md">
+                        <label asp-for="ServerNameLike" class="form-label fw-bold">Server</label>
+                        <input asp-for="ServerNameLike" type="text" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-md">
+                        <label asp-for="StartDate" class="form-label fw-bold">From</label>
+                        <input asp-for="StartDate" type="date" class="form-control form-control-sm" asp-format="{0:yyyy-MM-dd}" />
+                    </div>
+                    <div class="col-md">
+                        <label asp-for="EndDate" class="form-label fw-bold">To</label>
+                        <input asp-for="EndDate" type="date" class="form-control form-control-sm" asp-format="{0:yyyy-MM-dd}" />
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+                    </div>
+                    <div class="col-md-auto">
+                        <a asp-page="/Players" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
+                    </div>
+                </div>
+            </form>
+            @if (!string.IsNullOrEmpty(Model.MatchHistoryErrorMessage))
+            {
+                <div class="alert alert-warning text-center">@Model.MatchHistoryErrorMessage</div>
+            }
+            else if (Model.MatchHistoryData != null && Model.MatchHistoryData.Matches.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mt-3 table-sm" style="font-size: 0.9rem;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">MATCH ID</th>
+                                <th class="text-center">DATE</th>
+                                <th class="text-center">GAME</th>
+                                <th class="text-center">MAP</th>
+                                <th class="text-center">SERVER</th>
+                                <th class="text-center">TEAMS</th>
+                                <th class="text-center">SCORE</th>
+                                <th class="text-center">@((Model.ProfileData?.Name ?? "Player") + "'s Outcome")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var match in Model.MatchHistoryData.Matches)
+                            {
+                                var team1PlayerIds = match.Team1Players.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(id => id.Trim()).ToList();
+                                var team2PlayerIds = match.Team2Players.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(id => id.Trim()).ToList();
+
+                                int playerTeam = 0;
+                                if (team1PlayerIds.Contains(currentPlayerDiscordId)) playerTeam = 1;
+                                else if (team2PlayerIds.Contains(currentPlayerDiscordId)) playerTeam = 2;
+
+                                string outcome;
+                                string outcomeClass = "";
+
+                                if (match.WinnerTeam.HasValue)
+                                {
+                                    if (match.WinnerTeam.Value == 0)
+                                    {
+                                        outcome = "Draw";
+                                        outcomeClass = "";
+                                    }
+                                    else if (playerTeam != 0)
+                                    {
+                                        if (match.WinnerTeam.Value == playerTeam)
+                                        {
+                                            outcome = "Win";
+                                            outcomeClass = "text-success fw-bold";
+                                        }
+                                        else
+                                        {
+                                            outcome = "Loss";
+                                            outcomeClass = "text-danger fw-bold";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        outcome = match.WinnerTeam.Value == 1 ? "Blue Win" : "Red Win";
+                                    }
+                                }
+                                else
+                                {
+                                    outcome = "Unknown";
+                                }
+
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        <a asp-page="/MatchDetails" asp-route-id="@match.MatchDisplayId"><strong>@match.MatchDisplayId</strong></a>
+                                        @if (match.StatsUrls != null && match.StatsUrls.Any())
+                                        {
+                                            <br />
+                                            for (int i = 0; i < match.StatsUrls.Count; i++)
+                                            {
+                                                var urlString = match.StatsUrls[i];
+                                                if (Uri.TryCreate(urlString, UriKind.Absolute, out var uri))
+                                                {
+                                                    var hostName = uri.Host;
+                                                    <a href="@urlString" target="_blank" rel="noopener noreferrer" class="me-1" style="font-size: 0.8rem;">@hostName</a>
+                                                    if (i < match.StatsUrls.Count - 1)
+                                                    {
+                                                        <span style="margin: 0 1px;">|</span>
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        @match.MatchStartTime.ToLocalTime().ToString("yyyy-MM-dd")<br />
+                                        <small class="text-muted">@match.MatchStartTime.ToLocalTime().ToString("HH:mm (zzz)")</small>
+                                    </td>
+                                    <td class="text-center align-middle">@match.GameId</td>
+                                    <td class="text-center align-middle">@match.MapName</td>
+                                    <td class="text-center align-middle">@match.ServerInternalName</td>
+                                    <td class="align-middle">
+                                        <div style="font-size: 0.85rem;">
+                                            <strong style="color: #268bd2;">Team 1:</strong>
+                                            @for (int i = 0; i < team1PlayerIds.Count; i++)
+                                            {
+                                                var pId = team1PlayerIds[i];
+                                                var pName = Model.MatchHistoryData.PlayerDetails.TryGetValue(pId, out var pd) ? pd.Name : "Unknown";
+                                                <a asp-page="/Players" asp-route-id="@pId" style="color: #268bd2;">@pName</a>
+                                                if (i < team1PlayerIds.Count - 1) { <text>, </text> }
+                                            }
+                                        </div>
+                                        <div style="font-size: 0.85rem;">
+                                            <strong style="color: #dc3545;">Team 2:</strong>
+                                            @for (int i = 0; i < team2PlayerIds.Count; i++)
+                                            {
+                                                var pId = team2PlayerIds[i];
+                                                var pName = Model.MatchHistoryData.PlayerDetails.TryGetValue(pId, out var pd) ? pd.Name : "Unknown";
+                                                <a asp-page="/Players" asp-route-id="@pId" style="color: #dc3545;">@pName</a>
+                                                if (i < team2PlayerIds.Count - 1) { <text>, </text> }
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span style="color: #268bd2; font-weight: bold;">@(match.ScoreTeam1.HasValue ? match.ScoreTeam1.Value.ToString() : "-")</span> :
+                                        <span style="color: #dc3545; font-weight: bold;">@(match.ScoreTeam2.HasValue ? match.ScoreTeam2.Value.ToString() : "-")</span>
+                                    </td>
+                                    <td class="text-center align-middle @outcomeClass">@outcome</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination for Match History -->
+                @if (Model.MatchHistoryData != null && Model.MatchHistoryData.TotalPages > 1)
+                {
+                    <nav aria-label="Match history navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.MatchHistoryData.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="1" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">First</a>
+                            </li>
+                            <li class="page-item @(Model.MatchHistoryData.PrevPageUrl == null && Model.MatchHistoryData.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="@(Model.MatchHistoryCurrentPage - 1)" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">Previous</a>
+                            </li>
+
+                            @{
+                                int startPage = Math.Max(1, Model.MatchHistoryCurrentPage - 2);
+                                int endPage = Math.Min(Model.MatchHistoryData.TotalPages, Model.MatchHistoryCurrentPage + 2);
+                                if (Model.MatchHistoryCurrentPage <= 3) { endPage = Math.Min(Model.MatchHistoryData.TotalPages, 5); }
+                                if (Model.MatchHistoryCurrentPage > Model.MatchHistoryData.TotalPages - 3) { startPage = Math.Max(1, Model.MatchHistoryData.TotalPages - 4); }
+                            }
+
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item"><a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="1" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">1</a></li>
+                                if (startPage > 2) { <li class="page-item disabled"><span class="page-link">...</span></li> }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == Model.MatchHistoryCurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="@i" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">@i</a>
+                                </li>
+                            }
+
+                            @if (endPage < Model.MatchHistoryData.TotalPages)
+                            {
+                                if (endPage < Model.MatchHistoryData.TotalPages - 1) { <li class="page-item disabled"><span class="page-link">...</span></li> }
+                                <li class="page-item"><a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="@Model.MatchHistoryData.TotalPages" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">@Model.MatchHistoryData.TotalPages</a></li>
+                            }
+
+                            <li class="page-item @(Model.MatchHistoryData.NextPageUrl == null && Model.MatchHistoryData.CurrentPage == Model.MatchHistoryData.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="@(Model.MatchHistoryCurrentPage + 1)" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">Next</a>
+                            </li>
+                            <li class="page-item @(Model.MatchHistoryData.CurrentPage >= Model.MatchHistoryData.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-page="/Players" asp-route-id="@Model.Id" asp-route-MatchHistoryCurrentPage="@Model.MatchHistoryData.TotalPages" asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")" asp-route-GameId="@Model.GameId" asp-route-MapNameLike="@Model.MapNameLike" asp-route-ServerNameLike="@Model.ServerNameLike">Last</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else if (string.IsNullOrEmpty(Model.MatchHistoryErrorMessage))
+            {
+                <p class="text-center mt-3">No match history available for this player.</p>
+            }
+        }
+        else if (!string.IsNullOrEmpty(Model.ProfileErrorMessage))
+        {
+            <div class="alert alert-warning text-center">@Model.ProfileErrorMessage</div>
+        }
+        else
+        {
+            <p class="text-center alert alert-info">Player profile data is currently being loaded or is unavailable.</p>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("SCRIPT START: DOMContentLoaded fired.");
+
+            const eloHistoriesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EloHistories));
+            const profileData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProfileData));
+
+            console.log("EloHistoriesData object:", eloHistoriesData);
+
+            const cyborgColors = {
+                linePositive: 'rgba(0, 255, 150, 0.8)',
+                lineNegative: 'rgba(255, 70, 100, 0.8)',
+                pointColor: 'rgba(0, 220, 255, 0.9)',
+                pointBorder: 'rgba(255, 255, 255, 0.9)',
+                gridColor: 'rgba(255, 255, 255, 0.15)',
+                tooltipBg: 'rgba(10, 20, 30, 0.85)',
+                tooltipText: '#E0E0E0',
+                axisLabelColor: '#adb5bd'
+            };
+            const bootstrapThemeColors = {
+                success: '#198754',
+                danger: '#dc3545'
+            };
+
+            if (eloHistoriesData) {
+                for (const gameId in eloHistoriesData) {
+                    const historyApiResponse = eloHistoriesData[gameId];
+                    
+                    if (historyApiResponse && historyApiResponse.history && historyApiResponse.history.length > 0) {
+                        const historyEntries = historyApiResponse.history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                        
+                        const canvasId = `eloChart-${gameId.replace(/ /g, "-").toLowerCase()}`;
+                        const canvasElement = document.getElementById(canvasId);
+                        
+                        if (!canvasElement) {
+                            console.error(`Canvas element with ID ${canvasId} not found for game ${gameId}.`);
+                            continue;
+                        }
+
+                        console.log(`Preparing labels for ${gameId}. First few timestamps:`);
+                        historyEntries.slice(0, 5).forEach(entry => console.log(`Timestamp for chart: ${entry.timestamp}, type: ${typeof entry.timestamp}`)); // Log first 5 timestamps
+
+                        const labels = historyEntries.map(entry => {
+                            const dateObj = new Date(entry.timestamp);
+                            if (isNaN(dateObj.getTime())) { // Check if date is invalid
+                                console.error(`Invalid timestamp encountered for ${gameId}: ${entry.timestamp}`);
+                                return "Invalid Date"; // Return a placeholder if invalid
+                            }
+                            return dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                        });
+                        const dataPoints = historyEntries.map(entry => entry.new_elo);
+                        console.log('Data points for chart:', dataPoints); // Log the data points
+                        let currentLineColor = cyborgColors.pointColor;
+
+                        new Chart(canvasElement, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: `ELO History for ${gameId}`,
+                                    data: dataPoints,
+                                    borderColor: currentLineColor,
+                                    backgroundColor: currentLineColor.replace('0.9', '0.1').replace('0.8', '0.1'),
+                                    tension: 0.1,
+                                    fill: true,
+                                    pointBackgroundColor: cyborgColors.pointColor,
+                                    pointBorderColor: cyborgColors.pointBorder,
+                                    pointHoverBackgroundColor: cyborgColors.pointBorder,
+                                    pointHoverBorderColor: cyborgColors.pointColor,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        ticks: { color: cyborgColors.axisLabelColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 },
+                                        grid: { color: cyborgColors.gridColor, display: true }
+                                    },
+                                    y: {
+                                        beginAtZero: false,
+                                        ticks: { color: cyborgColors.axisLabelColor },
+                                        grid: { color: cyborgColors.gridColor }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        enabled: true,
+                                        backgroundColor: cyborgColors.tooltipBg,
+                                        titleColor: cyborgColors.tooltipText,
+                                        bodyColor: cyborgColors.tooltipText,
+                                        borderColor: cyborgColors.pointColor,
+                                        borderWidth: 1,
+                                        padding: 10,
+                                        callbacks: {
+                                            title: function(tooltipItems) {
+                                                const date = new Date(historyEntries[tooltipItems[0].dataIndex].timestamp);
+                                                return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                            },
+                                            label: function(tooltipItem) {
+                                                const entry = historyEntries[tooltipItem.dataIndex];
+                                                return `ELO: ${entry.new_elo}`;
+                                            },
+                                            afterBody: function(tooltipItems) {
+                                                const entry = historyEntries[tooltipItems[0].dataIndex];
+                                                let details = [];
+                                                let changeAmountStr = entry.change_amount > 0 ? `+${entry.change_amount}` : `${entry.change_amount}`;
+                                                details.push(`Change: ${changeAmountStr} ELO`);
+                                                if(entry.change_reason) details.push(`Reason: ${entry.change_reason}`);
+                                                if(entry.match_display_id) details.push(`Match: ${entry.match_display_id}`);
+                                                return details;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        const placeholderPara = canvasElement.parentElement.nextElementSibling; // Corrected selector
+                        if (placeholderPara && placeholderPara.tagName === 'P' && placeholderPara.textContent.includes('ELO graph for')) {
+                            placeholderPara.remove();
+                        }
+                    } else {
+                        const canvasId = `eloChart-${gameId.replace(/ /g, "-").toLowerCase()}`;
+                        const canvasElement = document.getElementById(canvasId);
+                        if(canvasElement){
+                            const placeholderPara = canvasElement.nextElementSibling;
+                            if (placeholderPara && placeholderPara.tagName === 'P' && placeholderPara.textContent.includes('ELO graph')) {
+                                placeholderPara.textContent = `ELO graph for ${gameId}: No history data found.`;
+                                console.warn(`No ELO history data found for ${gameId} in the script.`);
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.warn("EloHistoriesData is null or undefined after parsing.");
+            }
+            console.log("SCRIPT END: Reached end of DOMContentLoaded event listener.");
+        });
+    </script>
+} 

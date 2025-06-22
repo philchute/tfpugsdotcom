@@ -1,0 +1,67 @@
+@page
+@model tfpugsdotcom.Pages.Races.IndexModel
+@{
+    ViewData["Title"] = "Race Records";
+    
+    string FormatTime(double totalSeconds)
+    {
+        var timeSpan = TimeSpan.FromSeconds(totalSeconds);
+        // Pad minutes with a leading zero if needed.
+        return $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}.{timeSpan.Milliseconds:D3}";
+    }
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+    <p class="text-center text-muted">Showing the best time for each map.</p>
+    
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.Records.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover" style="font-size: 0.9rem;">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Map</th>
+                        <th scope="col">Record Holder</th>
+                        <th scope="col" class="text-end">Time</th>
+                        <th class="text-center">Date Set</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var record in Model.Records)
+                    {
+                        <tr>
+                            <td><a asp-page="./Map" asp-route-mapName="@record.MapName">@record.MapName</a></td>
+                            <td>
+                                <a asp-page="/Players" asp-route-id="@record.PlayerDiscordId" class="d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(record.AvatarUrl))
+                                    {
+                                        <img src="@record.AvatarUrl" alt="@record.PlayerName" class="avatar-sm me-2" style="width: 24px; height: 24px; border-radius: 50%;" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(record.AvatarDisplayString))
+                                    {
+                                        <span class="me-2" style="width: 24px; display: inline-block; text-align: center;">@Html.Raw(record.AvatarDisplayString)</span>
+                                    }
+                                    @record.PlayerName
+                                </a>
+                            </td>
+                            <td class="text-end">@FormatTime(record.BestTimeSeconds)</td>
+                            <td class="text-center">@record.SetAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <p class="text-center alert alert-info">No race records found.</p>
+    }
+</div> 

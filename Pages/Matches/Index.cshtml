@@ -1,0 +1,273 @@
+@page "{CurrentPage:int?}"
+@model tfpugsdotcom.Pages.Matches.IndexModel
+@{
+    ViewData["Title"] = "Recent Matches";
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">Recent Matches</h1>
+
+    <form method="get" class="mb-4 p-3 border rounded bg-light text-dark">
+        <div class="row g-2 align-items-end">
+             <div class="col-md">
+                <label asp-for="GameId" class="form-label fw-bold">Game</label>
+                <select asp-for="GameId" asp-items="Model.GameIdOptions" class="form-select form-select-sm"></select>
+            </div>
+            <div class="col-md">
+                <label asp-for="PlayerNameLike" class="form-label fw-bold">Player</label>
+                <input asp-for="PlayerNameLike" type="text" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md">
+                <label asp-for="MapNameLike" class="form-label fw-bold">Map</label>
+                <input asp-for="MapNameLike" type="text" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md">
+                <label asp-for="ServerNameLike" class="form-label fw-bold">Server</label>
+                <input asp-for="ServerNameLike" type="text" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md">
+                <label asp-for="StartDate" class="form-label fw-bold">From</label>
+                <input asp-for="StartDate" type="date" class="form-control form-control-sm" asp-format="{0:yyyy-MM-dd}" />
+            </div>
+            <div class="col-md">
+                <label asp-for="EndDate" class="form-label fw-bold">To</label>
+                <input asp-for="EndDate" type="date" class="form-control form-control-sm" asp-format="{0:yyyy-MM-dd}" />
+            </div>
+            <div class="col-md-auto">
+                <input type="hidden" name="PageSize" value="@Model.PageSize" /> 
+                <button type="submit" class="btn btn-info btn-sm w-100">Filter</button>
+            </div>
+            <div class="col-md-auto">
+                <a asp-page="/Matches/Index" asp-route-PageSize="@Model.PageSize" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.ApiData?.Matches != null && Model.ApiData.Matches.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover" style="font-size: 0.9rem;">
+                <thead class="thead-dark">
+                    <tr>
+                        <th style="width: 12%; vertical-align: middle;" class="text-center">MATCH ID</th>
+                        <th style="width: 10%; vertical-align: middle;" class="text-center">DATE PLAYED</th>
+                        <th style="width: 10%; vertical-align: middle;" class="text-center">MAP</th>
+                        <th style="width: 15%; vertical-align: middle;" class="text-center">SERVER</th>
+                        <th style="width: 18%; vertical-align: middle;" class="text-end">BLUE TEAM</th>
+                        <th style="width: 18%; vertical-align: middle;">RED TEAM</th>
+                        <th style="width: 7%; vertical-align: middle;" class="text-center">SCORE</th>
+                        <th style="width: 10%; vertical-align: middle;" class="text-center">OUTCOME</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var match in Model.ApiData.Matches)
+                    {
+                        <tr>
+                            <td style="vertical-align: middle;" class="text-center">
+                                <a asp-page="/Matches/Details" asp-route-id="@match.MatchDisplayId"><strong>@match.MatchDisplayId</strong></a>
+                                @if (match.StatsUrls != null && match.StatsUrls.Any())
+                                {
+                                    <br />
+                                    for (int i = 0; i < match.StatsUrls.Count; i++)
+                                    {
+                                        var urlString = match.StatsUrls[i];
+                                        if (Uri.TryCreate(urlString, UriKind.Absolute, out var uri))
+                                        {
+                                            var hostName = uri.Host;
+                                            <a href="@urlString" target="_blank" style="font-size: 0.8rem;">@hostName</a>
+                                            if (i < match.StatsUrls.Count - 1)
+                                            {
+                                                <span style="margin: 0 3px;">|</span>
+                                            }
+                                        }
+                                    }
+                                }
+                            </td>
+                            <td style="vertical-align: middle;" class="text-center">
+                                @match.MatchEndTime.ToLocalTime().ToString("MM/dd/yy")<br />
+                                <small class="text-muted">@match.MatchEndTime.ToLocalTime().ToString("hh:mm tt")</small>
+                            </td>
+                            <td style="vertical-align: middle;" class="text-center">@match.MapName</td>
+                            <td style="vertical-align: middle;" class="text-center">@match.ServerInternalName</td>
+                            <td style="vertical-align: middle;" class="text-end">
+                                <div style="font-size: 0.85rem;">
+                                    @foreach (var id in match.Team1Players.Split(','))
+                                    {
+                                        var trimmedId = id.Trim();
+                                        if (Model.ApiData.PlayerDetails.TryGetValue(trimmedId, out var playerDetail))
+                                        {
+                                            <a asp-page="/Players" asp-route-id="@trimmedId" class="d-flex align-items-center justify-content-end" style="color: #268bd2; margin-bottom: 2px;">
+                                                <span>@playerDetail.Name</span>
+                                                @if (!string.IsNullOrEmpty(playerDetail.AvatarUrl))
+                                                {
+                                                    <img src="@playerDetail.AvatarUrl" alt="@playerDetail.Name" class="avatar-sm ms-2" style="width: 16px; height: 16px; border-radius: 50%;" />
+                                                }
+                                                else if (!string.IsNullOrEmpty(playerDetail.AvatarDisplayString))
+                                                {
+                                                    <span class="ms-2" style="width: 16px; display: inline-block; text-align: center;">@Html.Raw(playerDetail.AvatarDisplayString)</span>
+                                                }
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-page="/Players" asp-route-id="@trimmedId" style="color: #268bd2; display: block; margin-bottom: 2px;">@trimmedId</a>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                             <td style="vertical-align: middle;">
+                                <div style="font-size: 0.85rem;">
+                                    @foreach (var id in match.Team2Players.Split(','))
+                                    {
+                                        var trimmedId = id.Trim();
+                                        if (Model.ApiData.PlayerDetails.TryGetValue(trimmedId, out var playerDetail))
+                                        {
+                                            <a asp-page="/Players" asp-route-id="@trimmedId" class="d-flex align-items-center" style="color: #dc3545; margin-bottom: 2px;">
+                                                @if (!string.IsNullOrEmpty(playerDetail.AvatarUrl))
+                                                {
+                                                    <img src="@playerDetail.AvatarUrl" alt="@playerDetail.Name" class="avatar-sm me-2" style="width: 16px; height: 16px; border-radius: 50%;" />
+                                                }
+                                                else if (!string.IsNullOrEmpty(playerDetail.AvatarDisplayString))
+                                                {
+                                                    <span class="me-2" style="width: 16px; display: inline-block; text-align: center;">@Html.Raw(playerDetail.AvatarDisplayString)</span>
+                                                }
+                                                <span>@playerDetail.Name</span>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-page="/Players" asp-route-id="@trimmedId" style="color: #dc3545; display: block; margin-bottom: 2px;">@trimmedId</a>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                            <td style="vertical-align: middle;" class="text-center">
+                                <span style="color: #268bd2; font-weight: bold;">@(match.ScoreTeam1.HasValue ? match.ScoreTeam1.Value.ToString() : "-")</span> :
+                                <span style="color: #dc3545; font-weight: bold;">@(match.ScoreTeam2.HasValue ? match.ScoreTeam2.Value.ToString() : "-")</span>
+                            </td>
+                            <td style="vertical-align: middle;" class="text-center">
+                                @if (match.WinnerTeam.HasValue)
+                                {
+                                    if (match.WinnerTeam.Value == 1)
+                                    {
+                                        <span style="color: #268bd2; font-weight: bold;">Blue Win</span>
+                                    }
+                                    else if (match.WinnerTeam.Value == 2)
+                                    {
+                                        <span style="color: #dc3545; font-weight: bold;">Red Win</span>
+                                    }
+                                    else if (match.WinnerTeam.Value == 0)
+                                    {
+                                        <span>Draw</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Unknown</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>Unknown</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mt-4 flex-wrap">
+            <form method="get" class="me-3 mb-2 mb-md-0">
+                 <input type="hidden" name="GameId" value="@Model.GameId" />
+                 <input type="hidden" name="MapNameLike" value="@Model.MapNameLike" />
+                 <input type="hidden" name="ServerNameLike" value="@Model.ServerNameLike" />
+                 <input type="hidden" name="PlayerNameLike" value="@Model.PlayerNameLike" />
+                 <input type="hidden" name="StartDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                 <input type="hidden" name="EndDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label asp-for="PageSize" class="col-form-label col-form-label-sm">Per Page:</label>
+                    </div>
+                    <div class="col-auto" style="width: 100px;"> 
+                        <select asp-for="PageSize" asp-items="Model.PageSizeOptions" class="form-select form-select-sm">
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label asp-for="GoToPage" class="col-form-label col-form-label-sm">Go to:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input asp-for="GoToPage" type="text" class="form-control form-control-sm" style="width: 70px;" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-secondary btn-sm">Go</button>
+                    </div>
+                </div>
+            </form>
+
+            <nav aria-label="Page navigation" class="ms-md-3">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.ApiData.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Matches/Index" 
+                           asp-route-CurrentPage="1" 
+                           asp-route-PageSize="@Model.PageSize" 
+                           asp-route-GameId="@Model.GameId"
+                           asp-route-MapNameLike="@Model.MapNameLike"
+                           asp-route-ServerNameLike="@Model.ServerNameLike"
+                           asp-route-PlayerNameLike="@Model.PlayerNameLike"
+                           asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")"
+                           asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")">First</a>
+                    </li>
+                    <li class="page-item @(Model.ApiData.PrevPageUrl == null && Model.ApiData.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Matches/Index" 
+                           asp-route-CurrentPage="@(Model.CurrentPage - 1)" 
+                           asp-route-PageSize="@Model.PageSize" 
+                           asp-route-GameId="@Model.GameId"
+                           asp-route-MapNameLike="@Model.MapNameLike"
+                           asp-route-ServerNameLike="@Model.ServerNameLike"
+                           asp-route-PlayerNameLike="@Model.PlayerNameLike"
+                           asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")"
+                           asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")">Previous</a>
+                    </li>
+
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">Page @Model.CurrentPage of @(Model.ApiData.TotalPages == 0 ? 1 : Model.ApiData.TotalPages)</span>
+                    </li>
+
+                    <li class="page-item @(Model.ApiData.NextPageUrl == null && Model.ApiData.CurrentPage >= Model.ApiData.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Matches/Index" 
+                           asp-route-CurrentPage="@(Model.CurrentPage + 1)" 
+                           asp-route-PageSize="@Model.PageSize" 
+                           asp-route-GameId="@Model.GameId"
+                           asp-route-MapNameLike="@Model.MapNameLike"
+                           asp-route-ServerNameLike="@Model.ServerNameLike"
+                           asp-route-PlayerNameLike="@Model.PlayerNameLike"
+                           asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")"
+                           asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")">Next</a>
+                    </li>
+                    <li class="page-item @(Model.ApiData.CurrentPage >= Model.ApiData.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Matches/Index" 
+                           asp-route-CurrentPage="@Model.ApiData.TotalPages" 
+                           asp-route-PageSize="@Model.PageSize" 
+                           asp-route-GameId="@Model.GameId"
+                           asp-route-MapNameLike="@Model.MapNameLike"
+                           asp-route-ServerNameLike="@Model.ServerNameLike"
+                           asp-route-PlayerNameLike="@Model.PlayerNameLike"
+                           asp-route-StartDate="@Model.StartDate?.ToString("yyyy-MM-dd")"
+                           asp-route-EndDate="@Model.EndDate?.ToString("yyyy-MM-dd")">Last</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <p>No recent matches found.</p>
+    }
+</div>

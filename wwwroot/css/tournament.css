@@ -1,0 +1,61 @@
+/* Custom styles for jquery.bracket to match the site's dark theme */
+.jQBracket .team {
+    background-color: #2a2a2a; /* A bit lighter than page background */
+    border-color: #444;
+    color: #eee;
+}
+
+.jQBracket .team .label {
+    color: #eee;
+    line-height: 20px; /* Vertically center text */
+}
+
+.jQBracket .team.win .label {
+    color: #fff;
+    font-weight: bold;
+}
+
+.jQBracket .team.lose {
+    background-color: #222;
+}
+
+ .jQBracket .team.lose .label {
+    color: #888;
+}
+
+.jQBracket .score {
+    background-color: #333;
+    color: #fff;
+    border-left: 1px solid #444;
+}
+
+.jQBracket .connector {
+    border-color: #444;
+}
+
+.jQBracket .connector .connector {
+    border-color: #444;
+}
+
+.jQBracket .match {
+    position: relative;
+}
+
+.jQBracket .match a.match-details-link {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    display: none; /* Hidden by default */
+    background: #007bff;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    text-decoration: none;
+}
+
+.jQBracket .match:hover a.match-details-link {
+    display: block; /* Show on hover */
+} 

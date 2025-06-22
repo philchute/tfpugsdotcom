@@ -1,0 +1,271 @@
+@page "/Matches/{Id}"
+@model tfpugsdotcom.Pages.Matches.DetailsModel
+@using tfpugsdotcom.Models
+@using System.Text.Json
+@using System.Globalization
+@using tfpugsdotcom.Models.ApiResponses
+
+@{
+    ViewData["Title"] = Model.MatchDetailsData?.MatchData != null ? $"Match Details - {Model.MatchDetailsData.MatchData.MatchDisplayId}" : "Match Details";
+
+    // Helper function to format award name (e.g., "concKills" to "Conc Kills")
+    Func<string, string> FormatAwardName = (awardKey) => 
+    {
+        if (string.IsNullOrEmpty(awardKey)) return string.Empty;
+        return System.Text.RegularExpressions.Regex.Replace(awardKey, "(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ")
+            .Replace("_", " ")
+            .Split(' ')
+            .Select(word => char.ToUpper(word[0]) + word.Substring(1))
+            .Aggregate((current, next) => current + " " + next);
+    };
+
+    Func<JsonElement, string> GetAwardValueString = (jsonElement) =>
+    {
+        if (jsonElement.ValueKind == JsonValueKind.Number)
+        {
+            return jsonElement.GetDouble().ToString(CultureInfo.InvariantCulture); 
+        }
+        return jsonElement.ToString() ?? "-";
+    };
+}
+
+<h1 class="page-title">@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+    return; 
+}
+
+@if (Model.MatchDetailsData?.MatchData == null)
+{
+    <div class="alert alert-info">Match data is currently unavailable.</div>
+    return;
+}
+
+@{ 
+    var match = Model.MatchDetailsData.MatchData;
+    var team1Players = Model.MatchDetailsData.Team1PlayersDetails;
+    var team2Players = Model.MatchDetailsData.Team2PlayersDetails;
+    var topPlayersData = match.TopPlayersData;
+}
+
+<!-- Main Match Info -->
+<div class="card mb-4">
+    <div class="card-header">
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4 text-sm-end">Game</dt>
+                    <dd class="col-sm-8">@match.GameId</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Map Name</dt>
+                    <dd class="col-sm-8">@(match.MapDisplayName ?? match.MapName)</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Map File</dt>
+                    <dd class="col-sm-8">@match.MapName</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Server</dt>
+                    <dd class="col-sm-8">@(match.ServerDisplayName ?? match.ServerInternalName)</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Region</dt>
+                    <dd class="col-sm-8">@match.RegionKey</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Status</dt>
+                    <dd class="col-sm-8">@match.Status.ToUpper()</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4 text-sm-end">Start Time</dt>
+                    <dd class="col-sm-8">@match.MatchStartTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss (zzz)")</dd>
+
+                    <dt class="col-sm-4 text-sm-end">End Time</dt>
+                    <dd class="col-sm-8">@match.MatchEndTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss (zzz)")</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Duration</dt>
+                    <dd class="col-sm-8">@TimeSpan.FromSeconds(match.DurationSeconds).ToString(@"hh\:mm\:ss")</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Moneyball</dt>
+                    <dd class="col-sm-8">@(match.IsMoneyball ? "Yes" : "No")</dd>
+
+                    <dt class="col-sm-4 text-sm-end">Map Test</dt>
+                    <dd class="col-sm-8">@(match.IsMapTest ? "Yes" : "No")</dd>
+
+                    <dt class="col-sm-4 text-sm-end">No ELO</dt>
+                    <dd class="col-sm-8">@(match.IsNoElo ? "Yes" : "No")</dd>
+                </dl>
+            </div>
+        </div>
+        @if (match.StatsUrls != null && match.StatsUrls.Any())
+        {
+            <div class="mt-3">
+                <strong>External Stats:</strong>
+                @for (int i = 0; i < match.StatsUrls.Count; i++)
+                {
+                    var urlString = match.StatsUrls[i];
+                    if (Uri.TryCreate(urlString, UriKind.Absolute, out var uri))
+                    {
+                        var hostName = uri.Host;
+                        <a href="@urlString" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-info ms-2">View on @hostName</a>
+                        if (i < match.StatsUrls.Count - 1)
+                        {
+                            <text> | </text>
+                        }
+                    }
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Score & Teams -->
+<div class="row mb-4">
+    <!-- Team 1 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header text-center">
+                <h5 style="color: #268bd2;">
+                    Team 1 - Score: @match.ScoreTeam1
+                    @if(match.WinnerTeam == 1) { <span class="badge bg-success ms-2">Winner</span> }
+                    @if(match.WinnerTeam == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
+                </h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                @if (team1Players != null && team1Players.Any())
+                {
+                    foreach (var player in team1Players)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a asp-page="/Players" asp-route-id="@player.DiscordId" class="d-flex align-items-center" style="color: #268bd2;">
+                                @if (!string.IsNullOrEmpty(player.AvatarUrl))
+                                {
+                                    <img src="@player.AvatarUrl" alt="@player.Name" style="height: 20px; width: 20px; border-radius: 50%; margin-right: 5px;" />
+                                }
+                                else if (!string.IsNullOrEmpty(player.AvatarDisplayString))
+                                {
+                                    <span style="margin-right: 5px;">@Html.Raw(player.AvatarDisplayString)</span>
+                                }
+                                @player.Name
+                            </a>
+                            <span class="badge @(player.EloChange >= 0 ? "bg-success" : "bg-danger")">
+                                @(player.EloChange >= 0 ? "+" : "")@player.EloChange ELO
+                            </span>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="list-group-item">No player data available for Team 1.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Team 2 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header text-center">
+                <h5 style="color: #dc3545;">
+                    Team 2 - Score: @match.ScoreTeam2
+                     @if(match.WinnerTeam == 2) { <span class="badge bg-success ms-2">Winner</span> }
+                     @if(match.WinnerTeam == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
+                </h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                @if (team2Players != null && team2Players.Any())
+                {
+                    foreach (var player in team2Players)
+                    {
+                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a asp-page="/Players" asp-route-id="@player.DiscordId" class="d-flex align-items-center" style="color: #dc3545;">
+                                @if (!string.IsNullOrEmpty(player.AvatarUrl))
+                                {
+                                    <img src="@player.AvatarUrl" alt="@player.Name" style="height: 20px; width: 20px; border-radius: 50%; margin-right: 5px;" />
+                                }
+                                else if (!string.IsNullOrEmpty(player.AvatarDisplayString))
+                                {
+                                    <span style="margin-right: 5px;">@Html.Raw(player.AvatarDisplayString)</span>
+                                }
+                                @player.Name
+                            </a>
+                            <span class="badge @(player.EloChange >= 0 ? "bg-success" : "bg-danger")">
+                                @(player.EloChange >= 0 ? "+" : "")@player.EloChange ELO
+                            </span>
+                        </li>
+                    }
+                }
+                else
+                {
+                     <li class="list-group-item">No player data available for Team 2.</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- Top Players Data / Awards -->
+@if (topPlayersData != null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Match Awards & Top Players</h4>
+        </div>
+        <div class="card-body">
+            @if (topPlayersData.Top3 != null && topPlayersData.Top3.Any())
+            {
+                <h5>Top 3 Players (by Points)</h5>
+                <ul class="list-group mb-3">
+                    @foreach (var topPlayer in topPlayersData.Top3.OrderByDescending(p => p.Points))
+                    {
+                        <li class="list-group-item">
+                            <strong>@topPlayer.PlayerName</strong> (Points: @topPlayer.Points.ToString("F3")) <small class="text-muted">SteamID: @topPlayer.SteamId</small>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (topPlayersData.OtherAwards != null && topPlayersData.OtherAwards.Any())
+            {
+                <h5>Other Awards</h5>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                @foreach (var awardEntry in topPlayersData.OtherAwards)
+                {
+                    if (awardEntry.Value.ValueKind != JsonValueKind.Null)
+                    {
+                        var awardData = System.Text.Json.JsonSerializer.Deserialize<SinglePlayerAward>(awardEntry.Value.GetRawText());
+                        if (awardData != null)
+                        {
+                            <div class="col">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@FormatAwardName(awardEntry.Key)</h6>
+                                        <p class="card-text mb-0">
+                                            <strong>@awardData.PlayerName:</strong> @GetAwardValueString(awardData.Value)
+                                        </p>
+                                        <small class="text-muted">SteamID: @awardData.SteamId</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+                </div>
+            }
+            
+            @if ((topPlayersData.Top3 == null || !topPlayersData.Top3.Any()) && 
+                 (topPlayersData.OtherAwards == null || !topPlayersData.OtherAwards.Any(oa => oa.Value.ValueKind != JsonValueKind.Null)))
+            {
+                <p>No specific player awards data available for this match.</p>
+            }
+        </div>
+    </div>
+}
+
+<hr />
+<div class="text-center">
+    <a asp-page="/Matches/Index">Back to Recent Matches</a>
+</div> 

@@ -1,0 +1,154 @@
+@page "/Servers"
+@model tfpugsdotcom.Pages.Servers.IndexModel
+@using tfpugsdotcom.Models
+@using System.Linq
+
+@{ ViewData["Title"] = "TFPugs Servers"; }
+
+<div class="container">
+    <header class="py-4">
+        <h1 class="page-title">TFPugs Servers</h1>
+        <p class="lead text-center">List of official TFPugs game servers. Click to connect or view live game info.</p>
+    </header>
+
+    <div class="mb-3 text-center">
+        <a href="/servers" class="btn btn-primary">Refresh All Server & Live Info</a>
+    </div>
+
+    <main>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">Error!</h4>
+                <p>There was an issue retrieving data. Please try refreshing the page. Details below:</p>
+                <hr>
+                <p class="mb-0" style="white-space: pre-wrap;">@Model.ErrorMessage</p>
+            </div>
+        }
+
+        @if (Model.AllServers != null && Model.AllServers.Any())
+        {
+            var allGames = Model.AllServers
+                .SelectMany(s => s.GameIds)
+                .Distinct()
+                .OrderBy(g => g);
+
+            foreach (var gameId in allGames)
+            {
+                <h2 class="text-white text-center mt-5 mb-3">@gameId Servers</h2>
+                var serversForGame = Model.AllServers.Where(s => s.GameIds.Contains(gameId)).OrderBy(s => s.DisplayName);
+
+                <div class="list-group">
+                    @foreach (var serverData in serversForGame)
+                    {
+                        var liveMatchForThisServer = Model.LiveMatches?.FirstOrDefault(lm => lm.ServerIp == serverData.IpAddress && lm.ServerPort == serverData.Port);
+                        var idSuffix = System.Text.RegularExpressions.Regex.Replace(serverData.InternalName, "[^a-zA-Z0-9_-]", "-"); // Sanitize for HTML ID
+
+                        var steamConnectGeneratedUrl = $"steam://connect/{serverData.IpAddress}:{serverData.Port}";
+                        if (!string.IsNullOrEmpty(serverData.ConnectPassword))
+                        {
+                            steamConnectGeneratedUrl += $"/{Uri.EscapeDataString(serverData.ConnectPassword)}";
+                        }
+
+                        var consoleConnectString = $"connect {serverData.IpAddress}:{serverData.Port}";
+                        if (!string.IsNullOrEmpty(serverData.ConnectPassword))
+                        {
+                            consoleConnectString += $"; password {serverData.ConnectPassword}";
+                        }
+                        var copyButtonId = $"copyBtn-{idSuffix}";
+                        var copyFeedbackId = $"copyFeedback-{idSuffix}";
+
+                        <div class="list-group-item mb-3 shadow-sm" id="server-item-@idSuffix">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <h5 class="mb-1">
+                                        @if (serverData.Tags != null && serverData.Tags.Any())
+                                        {
+                                            foreach (var tag in serverData.Tags)
+                                            {
+                                                <span class="badge bg-info text-dark rounded-pill me-2">@tag</span>
+                                            }
+                                        }
+                                        @serverData.DisplayName
+                                    </h5>
+                                    
+                                    <div class="mb-2">
+                                        <code class="user-select-all bg-dark text-white p-1 rounded" style="font-size: 0.9rem;">@consoleConnectString</code>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <a href="@steamConnectGeneratedUrl" class="btn btn-primary btn-sm me-2" target="_blank" rel="noopener noreferrer">Steam Connect Link</a>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="@copyButtonId" onclick="copyToClipboard('@consoleConnectString', '@copyFeedbackId')">Copy</button>
+                                        <small id="@copyFeedbackId" class="ms-2" style="display:none;"></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="live-info-section card" id="liveInfo-@idSuffix" style="min-height: 120px; @(liveMatchForThisServer == null ? "visibility: hidden;" : "")">
+                                        <div class="card-body bg-light p-2">
+                                            @if (liveMatchForThisServer != null)
+                                            {
+                                                <div class="row mb-1">
+                                                    <div class="col-sm-6"><small><strong>Status:</strong> <span>@liveMatchForThisServer.Status</span></small></div>
+                                                    <div class="col-sm-6"><small><strong>Round:</strong> <span>@(liveMatchForThisServer.TournamentRound ?? "N/A")</span></small></div>
+                                                </div>
+                                                <hr class="my-1" />
+                                                var team1 = liveMatchForThisServer.Teams?.FirstOrDefault(t => t.TeamLabel == "Team 1");
+                                                var team2 = liveMatchForThisServer.Teams?.FirstOrDefault(t => t.TeamLabel == "Team 2");
+                                                <div class="row mb-1">
+                                                    <div class="col-sm-8"><small><strong>Team 1:</strong> <span title="@(team1?.Players != null && team1.Players.Any() ? string.Join(", ", team1.Players.Select(p => p.NameFromContext)) : "N/A")">@(team1?.Players != null && team1.Players.Any() ? string.Join(", ", team1.Players.Select(p => p.NameFromContext).Take(2)) + (team1.Players.Count > 2 ? "..." : "") : "N/A")</span></small></div>
+                                                    <div class="col-sm-4"><small><strong>Score:</strong> <span>@(liveMatchForThisServer.UnofficialScores?.Team1.ToString() ?? "0")</span></small></div>
+                                                </div>
+                                                <div class="row mb-1">
+                                                    <div class="col-sm-8"><small><strong>Team 2:</strong> <span title="@(team2?.Players != null && team2.Players.Any() ? string.Join(", ", team2.Players.Select(p => p.NameFromContext)) : "N/A")">@(team2?.Players != null && team2.Players.Any() ? string.Join(", ", team2.Players.Select(p => p.NameFromContext).Take(2)) + (team2.Players.Count > 2 ? "..." : "") : "N/A")</span></small></div>
+                                                    <div class="col-sm-4"><small><strong>Score:</strong> <span>@(liveMatchForThisServer.UnofficialScores?.Team2.ToString() ?? "0")</span></small></div>
+                                                </div>
+                                                <hr class="my-1" />
+                                                <p class="mb-0"><small><strong>Map:</strong> <span>@liveMatchForThisServer.MapName</span></small></p>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center justify-content-center h-100">
+                                                    <small class="text-muted">No live game info.</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else if (string.IsNullOrEmpty(Model.ErrorMessage)) // Only show "no servers" if there wasn't a general API error
+        {
+            <p class="text-center">No servers are currently available.</p>
+        }
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard(textToCopy, feedbackElementId) {
+            const feedbackEl = document.getElementById(feedbackElementId);
+            if (!feedbackEl) return; 
+
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                feedbackEl.textContent = 'Copied!';
+                feedbackEl.className = 'ms-2 text-success'; 
+                feedbackEl.style.display = 'inline';
+                setTimeout(function() {
+                    feedbackEl.style.display = 'none';
+                }, 2000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+                feedbackEl.textContent = 'Copy failed. Try HTTPS or a different browser.';
+                feedbackEl.className = 'ms-2 text-danger'; 
+                feedbackEl.style.display = 'inline';
+                setTimeout(function() {
+                    feedbackEl.style.display = 'none';
+                }, 5000); 
+            });
+        }
+    </script>
+}

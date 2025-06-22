@@ -1,0 +1,71 @@
+@page "{mapName}"
+@model tfpugsdotcom.Pages.Races.MapModel
+@{
+    ViewData["Title"] = $"Race Leaderboard - {Model.MapName}";
+    
+    string FormatTime(double totalSeconds)
+    {
+        var timeSpan = TimeSpan.FromSeconds(totalSeconds);
+        return $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}.{timeSpan.Milliseconds:D3}";
+    }
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+    
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.Leaderboard.Count == 0)
+    {
+        <div class="text-center alert alert-info">
+            There are no recorded times for this map yet.
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Rank</th>
+                    <th scope="col">Player</th>
+                    <th scope="col" class="text-end">Time</th>
+                    <th scope="col" class="text-center">Date Set</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < Model.Leaderboard.Count; i++)
+                {
+                    var entry = Model.Leaderboard[i];
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>
+                            <a asp-page="/Players" asp-route-id="@entry.PlayerDiscordId" class="d-flex align-items-center">
+                                @if (!string.IsNullOrEmpty(entry.AvatarUrl))
+                                {
+                                    <img src="@entry.AvatarUrl" alt="@entry.PlayerName" class="avatar-sm me-2" style="width: 24px; height: 24px; border-radius: 50%;" />
+                                }
+                                else if (!string.IsNullOrEmpty(entry.AvatarDisplayString))
+                                {
+                                    <span class="me-2" style="width: 24px; display: inline-block; text-align: center;">@Html.Raw(entry.AvatarDisplayString)</span>
+                                }
+                                @entry.PlayerName
+                            </a>
+                        </td>
+                        <td class="text-end">@FormatTime(entry.BestTimeSeconds)</td>
+                        <td class="text-center">
+                            @if (entry.SetAt != default(DateTime))
+                            {
+                                @entry.SetAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div> 

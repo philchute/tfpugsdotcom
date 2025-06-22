@@ -1,0 +1,201 @@
+@page
+@model tfpugsdotcom.Pages.TournamentsModel
+@using tfpugsdotcom.Models
+@using System.Text.Json;
+
+@{
+    ViewData["Title"] = "Tournaments";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
+<link rel="stylesheet" href="~/css/tournament.css" asp-append-version="true" />
+
+<div class="container mt-4">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.Tournaments != null && Model.Tournaments.Any())
+    {
+        foreach (var tournament in Model.Tournaments)
+        {
+            <div class="tournament-container card shadow-sm mb-5">
+                <div class="card-header text-center">
+                    <h2 class="mb-0">
+                        <a asp-page="/Tournaments" asp-route-id="@tournament.TournamentId" class="text-decoration-none">
+                            @tournament.DisplayId
+                        </a>
+                    </h2>
+                    <p class="lead text-muted mb-0">@tournament.GameId - @tournament.Size Players</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9 border-end">
+                             <div class="bracket-wrapper" style="overflow-x: auto;">
+                                <div class="bracket" id="bracket-@tournament.TournamentId"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="text-center mb-3">Final Placements</h5>
+                            @if (tournament.Standings != null && tournament.Standings.Any())
+                            {
+                                <ol class="list-group list-group-flush">
+                                    @foreach (var standing in tournament.Standings.OrderBy(s => s.Rank))
+                                    {
+                                        if (standing.Participant != null)
+                                        {
+                                            var page = standing.Participant.Type == "team" ? "/Team" : "/Players";
+                                            var link = $"{page}/{standing.Participant.Id}";
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div class="ms-2 me-auto">
+                                                    <div class="fw-bold">
+                                                        <a href="@link" class="text-decoration-none">
+                                                            @if (!string.IsNullOrEmpty(standing.Participant.ImageUrl))
+                                                            {
+                                                                <img src="@standing.Participant.ImageUrl" alt="" class="avatar-sm me-1" style="width: 20px; height: 20px; border-radius: 50%;" />
+                                                            }
+                                                            else if (!string.IsNullOrEmpty(standing.Participant.AvatarUrl))
+                                                            {
+                                                                <img src="@standing.Participant.AvatarUrl" alt="" class="avatar-sm me-1" style="width: 20px; height: 20px; border-radius: 50%;" />
+                                                            }
+                                                            else if (!string.IsNullOrEmpty(standing.Participant.AvatarDisplayString))
+                                                            {
+                                                                <span class="me-1">@Html.Raw(standing.Participant.AvatarDisplayString)</span>
+                                                            }
+                                                            @standing.Participant.Name
+                                                        </a>
+                                                    </div>
+                                                    <small class="text-muted">@standing.Wins Wins</small>
+                                                </div>
+                                                <span class="badge bg-primary rounded-pill">@standing.Rank</span>
+                                            </li>
+                                        }
+                                    }
+                                </ol>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted mt-4">
+                                    <small>Final standings are not yet available.</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else if (string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-info text-center">
+            There are no tournaments to display.
+        </div>
+    }
+
+    <!-- Pagination Controls -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Tournament navigation">
+            <ul class="pagination justify-content-center">
+                @if (Model.CurrentPage > 1)
+                {
+                    <li class="page-item"><a class="page-link" asp-page="/Tournaments" asp-route-page="@(Model.CurrentPage - 1)">Previous</a></li>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-page="/Tournaments" asp-route-page="@i">@i</a>
+                    </li>
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <li class="page-item"><a class="page-link" asp-page="/Tournaments" asp-route-page="@(Model.CurrentPage + 1)">Next</a></li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+    <script>
+        $(function() {
+            var tournamentsData = @Html.Raw(JsonSerializer.Serialize(Model.Tournaments));
+
+            if (tournamentsData && tournamentsData.length > 0) {
+                
+                function render_fn(container, data, score, state) {
+                    if (!data || !data.name) {
+                        if (state === 'empty-bye') {
+                            container.text('BYE');
+                        } else {
+                            container.text('');
+                        }
+                        return;
+                    }
+
+                    var page = data.type === 'team' ? '/Team' : '/Players';
+                    var link = $('<a>').attr('href', `${page}/${data.id}`).addClass('d-flex align-items-center text-decoration-none');
+
+                    var avatarHtml = '';
+                    if(data.image_url) {
+                        avatarHtml = `<img src="${data.image_url}" class="avatar-sm me-2" style="width: 20px; height: 20px; border-radius: 50%;" />`;
+                    } else if (data.avatar_url) {
+                        avatarHtml = `<img src="${data.avatar_url}" class="avatar-sm me-2" style="width: 20px; height: 20px; border-radius: 50%;" />`;
+                    } else if (data.avatar_display_string) {
+                        avatarHtml = `<span class="me-2">${data.avatar_display_string}</span>`;
+                    }
+                    
+                    link.html(avatarHtml + `<span>${data.name}</span>`);
+                    container.html(link);
+                }
+
+                tournamentsData.forEach(function(tournament) {
+                    var bracketData = tournament.bracket_data;
+                    var matchesStructure = tournament.matches_structure;
+                    var containerId = `#bracket-${tournament.tournament_id}`;
+
+                    if (bracketData && bracketData.teams && bracketData.teams.length > 0) {
+                        $(containerId).bracket({
+                            init: bracketData,
+                            skipConsolation: true,
+                            teamWidth: 180,
+                            scoreWidth: 30,
+                            matchMargin: 50,
+                            roundMargin: 60,
+                            dir: 'lr',
+                            decorator: { render: render_fn, edit: (c,d,done) => done(d) }
+                        });
+
+                        if (matchesStructure && matchesStructure.length > 0) {
+                            var rounds = $(containerId).find('.round');
+                            rounds.each(function(roundIndex, roundElem) {
+                                var matches = $(roundElem).find('.match');
+                                matches.each(function(matchIndex, matchElem) {
+                                    if (matchesStructure[roundIndex] && matchesStructure[roundIndex][matchIndex]) {
+                                        var matchData = matchesStructure[roundIndex][matchIndex];
+                                        if (matchData && matchData.match_display_id) {
+                                            $(matchElem).css('cursor', 'pointer').attr('title', 'Click for details');
+                                            $(matchElem).on('click', function() {
+                                                window.location.href = '/Matches/' + matchData.match_display_id;
+                                            });
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    } else {
+                         $(containerId).text('No bracket data available for this tournament.').addClass('alert alert-warning text-center');
+                    }
+                });
+            }
+        });
+    </script>
+} 

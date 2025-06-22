@@ -1,0 +1,52 @@
+@page "/ShopItems"
+@model tfpugsdotcom.Pages.ShopItemsModel
+@{
+    ViewData["Title"] = "Shop Items";
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger text-center">@Model.ErrorMessage</div>
+    }
+    else if (Model.ShopItems.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model.ShopItems)
+            {
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 shadow">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">🏷️ @item.Name</h5>
+                            <span class="fw-bold">@item.Cost.ToString("N0") 💎</span>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(item.ItemUrl))
+                            {
+                                <img src="@item.ItemUrl" alt="@item.Name" style="float: left; height: 48px; width: 48px; margin-right: 15px; margin-bottom: 5px;" />
+                            }
+                            <p class="card-text">@item.Description</p>
+                        </div>
+                        <div class="card-footer text-muted small text-start">
+                            @{
+                                var command = $"/buy {item.Id}";
+                                if (item.RequiresParam)
+                                {
+                                    command += $" [{item.ParamName}]";
+                                }
+                                var availabilityText = Model.GetAvailabilityText(item.Availability);
+                            }
+                            <span>Purchase @availabilityText with: <code>@command</code></span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-center alert alert-info">The shop is currently empty.</p>
+    }
+</div> 

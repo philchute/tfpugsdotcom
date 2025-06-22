@@ -1,0 +1,136 @@
+@page "/Achievements"
+@model tfpugsdotcom.Pages.AchievementsModel
+@using tfpugsdotcom.Models
+
+@{
+    ViewData["Title"] = "All Available Achievements";
+}
+
+<div class="container mt-4">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+
+    <!-- Sorting Controls -->
+    <div class="d-flex justify-content-center align-items-center mb-4">
+        <span class="me-3">Sort by:</span>
+        <div class="btn-group">
+            <a asp-page="/Achievements" asp-route-SortBy="game" class="btn btn-sm @(Model.SortBy == "game" ? "btn-primary" : "btn-outline-primary")">Game</a>
+            <a asp-page="/Achievements" asp-route-SortBy="name" class="btn btn-sm @(Model.SortBy == "name" ? "btn-primary" : "btn-outline-primary")">Name</a>
+            <a asp-page="/Achievements" asp-route-SortBy="percentage" class="btn btn-sm @(Model.SortBy == "percentage" ? "btn-primary" : "btn-outline-primary")">Rarity</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger text-center">@Model.ErrorMessage</div>
+    }
+    else if (Model.DisplayAchievements.Any())
+    {
+        @if (Model.SortBy == "game")
+        {
+            @foreach (var gameName in Model.GameDisplayOrder)
+            {
+                if (Model.GroupedByGameAndTag.TryGetValue(gameName, out var achievementsByTag))
+                {
+                    <h2 class="display-6 mt-5 mb-3 text-center">@gameName Achievements</h2>
+                    <hr/>
+
+                    @foreach (var tagGroup in achievementsByTag.OrderBy(t => t.Key))
+                    {
+                        <h4 class="mt-4 mb-3 text-muted text-center">@tagGroup.Key</h4>
+                        <div class="row">
+                            @foreach (var ach in tagGroup.Value)
+                            {
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100 shadow">
+                                        <div class="card-header d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(ach.IconUrl))
+                                            {
+                                                <img src="@ach.IconUrl" alt="@ach.Name" style="height: 24px; width: 24px; margin-right: 10px;" />
+                                            }
+                                            else if (!string.IsNullOrEmpty(ach.DisplayValue))
+                                            {
+                                                <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
+                                            }
+                                            <h5 class="mb-0">@ach.Name</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">@ach.Description</p>
+                                        </div>
+                                        <div class="card-footer text-muted small">
+                                             <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    @if (ach.IsSingularHolder)
+                                                    {
+                                                        <span>Singular</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span title="@ach.HolderCount.ToString("N0") holders">
+                                                            Earned by: @(ach.HolderPercentage.HasValue ? ach.HolderPercentage.Value.ToString("P1") : "N/A")
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            }
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var ach in Model.DisplayAchievements)
+                {
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100 shadow">
+                            <div class="card-header d-flex align-items-center">
+                                @if (!string.IsNullOrEmpty(ach.IconUrl))
+                                {
+                                    <img src="@ach.IconUrl" alt="@ach.Name" style="height: 24px; width: 24px; margin-right: 10px;" />
+                                }
+                                else if (!string.IsNullOrEmpty(ach.DisplayValue))
+                                {
+                                    <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
+                                }
+                                <h5 class="mb-0">@ach.Name</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">@ach.Description</p>
+                            </div>
+                            <div class="card-footer text-muted small">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        @if (ach.IsSingularHolder)
+                                        {
+                                            <span>Singular</span>
+                                        }
+                                        else
+                                        {
+                                            <span title="@ach.HolderCount.ToString("N0") holders">
+                                                Earned by: @(ach.HolderPercentage.HasValue ? ach.HolderPercentage.Value.ToString("P1") : "N/A")
+                                            </span>
+                                        }
+                                    </div>
+                                    <div>
+                                        @foreach(var tag in ach.Tags)
+                                        {
+                                            <span class="badge bg-secondary">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-center alert alert-info">No achievements found matching the criteria.</p>
+    }
+</div> 

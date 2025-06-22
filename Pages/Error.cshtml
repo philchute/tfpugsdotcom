@@ -1,0 +1,16 @@
+﻿@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error</h1>
+<h2 class="text-danger">An unexpected error occurred.</h2>
+<p>We apologize for the inconvenience. Please try again, or return to the <a href="/">homepage</a>.</p>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <small>If you need to contact support, please provide the following Request ID: <code>@Model.RequestId</code></small>
+    </p>
+}
