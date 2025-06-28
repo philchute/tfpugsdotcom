@@ -150,6 +150,13 @@ namespace tfpugsdotcom.Pages
             }
 
             // Task 3: Fetch Match History
+
+            // Ensure page is at least 1 to prevent API errors
+            if (MatchHistoryCurrentPage < 1)
+            {
+                MatchHistoryCurrentPage = 1;
+            }
+
             var matchHistoryParams = new Dictionary<string, string>
             {
                 { "page", MatchHistoryCurrentPage.ToString() },

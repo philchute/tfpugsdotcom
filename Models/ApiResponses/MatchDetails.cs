@@ -43,13 +43,13 @@ namespace tfpugsdotcom.Models.ApiResponses
         public string? MapDisplayName { get; set; }
 
         [JsonPropertyName("winner_team")]
-        public int WinnerTeam { get; set; }
+        public int? WinnerTeam { get; set; }
 
         [JsonPropertyName("score_team1")]
-        public int ScoreTeam1 { get; set; }
+        public int? ScoreTeam1 { get; set; }
 
         [JsonPropertyName("score_team2")]
-        public int ScoreTeam2 { get; set; }
+        public int? ScoreTeam2 { get; set; }
 
         [JsonPropertyName("match_start_time")]
         public DateTime MatchStartTime { get; set; }
@@ -133,6 +133,6 @@ namespace tfpugsdotcom.Models.ApiResponses
         public string? AvatarUrl { get; set; }
 
         [JsonPropertyName("elo_change")]
-        public int EloChange { get; set; }
+        public int? EloChange { get; set; }
     }
 } 

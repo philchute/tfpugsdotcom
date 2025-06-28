@@ -46,8 +46,15 @@ namespace ASP_site.Pages.Servers
                 case "tfpeast2vultr":
                     return Redirect("steam://connect/104.207.129.123:27015/letsplay!");
                 
+                case "nnyc":
                 case "newnyc":
                     return Redirect("steam://connect/149.28.56.141:27015/letsplay!");
+                
+                case "santiago":
+                case "chile":
+                case "tfpsantiago":
+                case "tfpchile":
+                    return Redirect("steam://connect/64.176.14.39:27015/letsplay!");
 
                 case "ricochet":
                 case "tfpugsricochet":

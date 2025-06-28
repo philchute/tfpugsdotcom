@@ -185,11 +185,11 @@ To set up the lagless timer you'll want to do two things: silence the server-sid
 *   Copy this [timer_silent.wav](https://cdn.discordapp.com/attachments/1000595201557008467/1156628833001283584/timer_silent.wav) file into your `tfc\sound\weapons\` folder, and rename it to `timer.wav` (this will mute the server-side beeps).
 *   Finally, add `spk mytimer` to your grenade binds in your configs. For example if your current config has  
 ```
-bind f "+gren1"
+bind mouse4 "+gren1"
 ```
 that would become  
 ```
-bind f "+gren1; spk mytimer"
+bind mouse4 "+gren1; spk mytimer"
 ```
 
 ### Steam Game Recording

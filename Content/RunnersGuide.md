@@ -62,25 +62,32 @@ Welcome to the TFpugs community! We are entering a period of expansion and growt
 The server list, as available to the bot, is available [here](/Servers) but I will hardcode them here on this website guide for redundancy in case the bot is not responding to that there. 
 
 Dallas TFC pug server: connect 149.28.241.217:27015; password letsplay!  
-[legacy tiny url](https://tinyurl.com/tfpcentralvultr2)  
-[philchute.com forwarder](http://philchute.com/Servers/tfpcentral)  
+[tinyurl](https://tinyurl.com/tfpcentralvultr2)
+[philchute.com](http://philchute.com/servers/tfpcentral)
+[tfpugs.com](http://tfpugs.com/servers/dallas)
 
 Miami TFC pug server: connect 45.77.162.42:27015; password letsplay!   
-[legacy tiny url](https://tinyurl.com/tfpsoutheastvultr)	
-[philchute.com forwarder](http://philchute.com/Servers/tfsoutheast)  
+[tinyurl](https://tinyurl.com/tfpsoutheastvultr)	
+[philchute.com](http://philchute.com/servers/tfsoutheast)  
+[tfpugs.com](http://tfpugs.com/servers/miami)
 
 Current NYC pug server: connect 104.207.129.123:27015; password letsplay!  
-[legacy tiny url](https://tinyurl.com/tfpeast2vultr)  
-[philchute.com forwarder](http://philchute.com/Servers/tfpeast2)  
+[tinyurl](https://tinyurl.com/tfpeast2vultr)  
+[philchute.com](http://philchute.com/servers/tfpeast2)  
+[tfpugs.com](http://tfpugs.com/servers/nyc)
 
 New NYC TFC conc pub server: connect 149.28.56.141:27014
 
 New NYC TFC pug server: connect 149.28.56.141:27015; password letsplay!  
-[philchute.com forwarder](http://philchute.com/Servers/tfpugsnyc)  
+[philchute.com](http://philchute.com/servers/tfpugsnyc)
+[tfpugs.com](http://tfpugs.com/servers/newnyc)
 
 New NYC Ricochet 1v1 pug server: connect 149.28.56.141:27016; password letsplay!  
-[philchute.com forwarder](http://philchute.com/Servers/tfpugsricochet)
+[philchute.com](http://philchute.com/servers/tfpugsricochet)
+[tfpugs.com](http://tfpugs.com/servers/ricochet)
 
+New Santiago, Chile TFC pug server: connect 64.176.14.39:27015; password letsplay!  
+[tfpugs.com](http://tfpugs.com/servers/santiago)
 
 ## Bot commands
 
