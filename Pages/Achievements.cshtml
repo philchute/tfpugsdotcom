@@ -51,7 +51,10 @@
                                             {
                                                 <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
                                             }
-                                            <h5 class="mb-0">@ach.Name</h5>
+                                            @{
+                                                var achNameStyle = !string.IsNullOrEmpty(ach.NameColorHex) ? $"style=\"color: {ach.NameColorHex};\"" : "";
+                                            }
+                                            <h5 class="mb-0" @Html.Raw(achNameStyle)>@ach.Name</h5>
                                         </div>
                                         <div class="card-body">
                                             <p class="card-text">@ach.Description</p>
@@ -96,7 +99,10 @@
                                 {
                                     <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
                                 }
-                                <h5 class="mb-0">@ach.Name</h5>
+                                @{
+                                    var achNameStyle = !string.IsNullOrEmpty(ach.NameColorHex) ? $"style=\"color: {ach.NameColorHex};\"" : "";
+                                }
+                                <h5 class="mb-0" @Html.Raw(achNameStyle)>@ach.Name</h5>
                             </div>
                             <div class="card-body">
                                 <p class="card-text">@ach.Description</p>

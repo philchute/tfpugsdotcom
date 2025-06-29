@@ -36,6 +36,9 @@ namespace tfpugsdotcom.Models.ApiResponses
         [JsonPropertyName("is_singular_holder")]
         public bool IsSingularHolder { get; set; }
 
+        [JsonPropertyName("name_color_hex")]
+        public string? NameColorHex { get; set; }
+
         [JsonPropertyName("holder_count")]
         public int HolderCount { get; set; }
 

@@ -1,4 +1,4 @@
-@page "/Matches/{Id}"
+@page "/Matches/Details/{Id}"
 @model tfpugsdotcom.Pages.Matches.DetailsModel
 @using tfpugsdotcom.Models
 @using System.Text.Json
@@ -86,7 +86,7 @@
                     <dd class="col-sm-8">@match.MatchEndTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss (zzz)")</dd>
 
                     <dt class="col-sm-4 text-sm-end">Duration</dt>
-                    <dd class="col-sm-8">@TimeSpan.FromSeconds(match.DurationSeconds).ToString(@"hh\:mm\:ss")</dd>
+                    <dd class="col-sm-8">@(match.DurationSeconds.HasValue ? TimeSpan.FromSeconds(match.DurationSeconds.Value).ToString(@"hh\:mm\:ss") : "-")</dd>
 
                     <dt class="col-sm-4 text-sm-end">Moneyball</dt>
                     <dd class="col-sm-8">@(match.IsMoneyball ? "Yes" : "No")</dd>
@@ -128,9 +128,9 @@
         <div class="card h-100">
             <div class="card-header text-center">
                 <h5 style="color: #268bd2;">
-                    Team 1 - Score: @match.ScoreTeam1
-                    @if(match.WinnerTeam == 1) { <span class="badge bg-success ms-2">Winner</span> }
-                    @if(match.WinnerTeam == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
+                    Team 1 - Score: @(match.ScoreTeam1?.ToString() ?? "-")
+                    @if(match.WinnerTeam.HasValue && match.WinnerTeam.Value == 1) { <span class="badge bg-success ms-2">Winner</span> }
+                    @if(match.WinnerTeam.HasValue && match.WinnerTeam.Value == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
                 </h5>
             </div>
             <ul class="list-group list-group-flush">
@@ -150,8 +150,8 @@
                                 }
                                 @player.Name
                             </a>
-                            <span class="badge @(player.EloChange >= 0 ? "bg-success" : "bg-danger")">
-                                @(player.EloChange >= 0 ? "+" : "")@player.EloChange ELO
+                            <span class="badge @(player.EloChange.HasValue ? (player.EloChange.Value >= 0 ? "bg-success" : "bg-danger") : "bg-secondary")">
+                                @(player.EloChange.HasValue ? $"{(player.EloChange.Value >= 0 ? "+" : "")}{player.EloChange.Value} ELO" : "N/A")
                             </span>
                         </li>
                     }
@@ -169,9 +169,9 @@
         <div class="card h-100">
             <div class="card-header text-center">
                 <h5 style="color: #dc3545;">
-                    Team 2 - Score: @match.ScoreTeam2
-                     @if(match.WinnerTeam == 2) { <span class="badge bg-success ms-2">Winner</span> }
-                     @if(match.WinnerTeam == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
+                    Team 2 - Score: @(match.ScoreTeam2?.ToString() ?? "-")
+                     @if(match.WinnerTeam.HasValue && match.WinnerTeam.Value == 2) { <span class="badge bg-success ms-2">Winner</span> }
+                     @if(match.WinnerTeam.HasValue && match.WinnerTeam.Value == 0) { <span class="badge bg-warning text-dark ms-2">Draw</span> }
                 </h5>
             </div>
             <ul class="list-group list-group-flush">
@@ -191,8 +191,8 @@
                                 }
                                 @player.Name
                             </a>
-                            <span class="badge @(player.EloChange >= 0 ? "bg-success" : "bg-danger")">
-                                @(player.EloChange >= 0 ? "+" : "")@player.EloChange ELO
+                            <span class="badge @(player.EloChange.HasValue ? (player.EloChange.Value >= 0 ? "bg-success" : "bg-danger") : "bg-secondary")">
+                                @(player.EloChange.HasValue ? $"{(player.EloChange.Value >= 0 ? "+" : "")}{player.EloChange.Value} ELO" : "N/A")
                             </span>
                         </li>
                     }
@@ -222,7 +222,7 @@
                     @foreach (var topPlayer in topPlayersData.Top3.OrderByDescending(p => p.Points))
                     {
                         <li class="list-group-item">
-                            <strong>@topPlayer.PlayerName</strong> (Points: @topPlayer.Points.ToString("F3")) <small class="text-muted">SteamID: @topPlayer.SteamId</small>
+                            <strong>@topPlayer.PlayerName</strong> (Points: @(topPlayer.Points.HasValue ? topPlayer.Points.Value.ToString("F3") : "N/A")) <small class="text-muted">SteamID: @topPlayer.SteamId</small>
                         </li>
                     }
                 </ul>
@@ -234,23 +234,30 @@
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                 @foreach (var awardEntry in topPlayersData.OtherAwards)
                 {
-                    if (awardEntry.Value.ValueKind != JsonValueKind.Null)
+                    try
                     {
-                        var awardData = System.Text.Json.JsonSerializer.Deserialize<SinglePlayerAward>(awardEntry.Value.GetRawText());
-                        if (awardData != null)
+                        if (awardEntry.Value.ValueKind != JsonValueKind.Null)
                         {
-                            <div class="col">
-                                <div class="card bg-light h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title">@FormatAwardName(awardEntry.Key)</h6>
-                                        <p class="card-text mb-0">
-                                            <strong>@awardData.PlayerName:</strong> @GetAwardValueString(awardData.Value)
-                                        </p>
-                                        <small class="text-muted">SteamID: @awardData.SteamId</small>
+                            var awardData = System.Text.Json.JsonSerializer.Deserialize<SinglePlayerAward>(awardEntry.Value.GetRawText());
+                            if (awardData != null)
+                            {
+                                <div class="col">
+                                    <div class="card bg-light h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@FormatAwardName(awardEntry.Key)</h6>
+                                            <p class="card-text mb-0">
+                                                <strong>@awardData.PlayerName:</strong> @GetAwardValueString(awardData.Value)
+                                            </p>
+                                            <small class="text-muted">SteamID: @awardData.SteamId</small>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
                         }
+                    }
+                    catch
+                    {
+                        // Silently ignore awards that fail to parse to prevent a page crash.
                     }
                 }
                 </div>

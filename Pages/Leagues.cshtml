@@ -210,7 +210,7 @@
                                                             <td class="match-cell">
                                                                 @if (!string.IsNullOrEmpty(result.LeagueMatchId))
                                                                 {
-                                                                    <a asp-page="/MatchDetails" asp-route-id="@result.LeagueMatchId" title="View Match @result.LeagueMatchId">
+                                                                    <a asp-page="/Matches/Details" asp-route-id="@result.LeagueMatchId" title="View Match @result.LeagueMatchId">
                                                                         @if(result.Status?.ToLower() == "completed")
                                                                         {
                                                                             var us_score = result.Team1Id == rowTeam.TeamId ? result.ScoreTeam1 : result.ScoreTeam2;

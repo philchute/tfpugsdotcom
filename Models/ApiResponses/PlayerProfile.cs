@@ -18,6 +18,9 @@ namespace tfpugsdotcom.Models.ApiResponses
         [JsonPropertyName("avatar_url")]
         public string? AvatarUrl { get; set; }
 
+        [JsonPropertyName("name_color_hex")]
+        public string? NameColorHex { get; set; }
+
         [JsonPropertyName("gems")]
         public long? Gems { get; set; }
 
@@ -83,6 +86,9 @@ namespace tfpugsdotcom.Models.ApiResponses
 
         [JsonPropertyName("game_id")]
         public string? GameId { get; set; }
+
+        [JsonPropertyName("name_color_hex")]
+        public string? NameColorHex { get; set; }
     }
 
     public class EloHistoryApiResponse

@@ -6,6 +6,7 @@
 @{
     ViewData["Title"] = Model.ProfileData != null ? $"{Model.ProfileData.Name}'s Profile" : "Player Profile";
     var currentPlayerDiscordId = Model.Id;
+    var nameStyle = !string.IsNullOrEmpty(Model.ProfileData?.NameColorHex) ? $"style=\"color: {Model.ProfileData.NameColorHex};\"" : "";
 }
 
 <div class="container mt-4">
@@ -15,7 +16,7 @@
     }
     else
     {
-        <h1 class="page-title">@ViewData["Title"]</h1>
+        <h1 class="page-title" @Html.Raw(nameStyle)>@ViewData["Title"]</h1>
 
         if (Model.ProfileData != null)
         {
@@ -62,7 +63,10 @@
                                     {
                                         <span style="font-size: 1.5rem; margin-right: 10px; line-height: 1;">@Html.Raw(ach.DisplayValue)</span>
                                     }
-                                    <h5 class="mb-0">@ach.Name</h5>
+                                    @{
+                                        var achNameStyle = !string.IsNullOrEmpty(ach.NameColorHex) ? $"style=\"color: {ach.NameColorHex};\"" : "";
+                                    }
+                                    <h5 class="mb-0" @Html.Raw(achNameStyle)>@ach.Name</h5>
                                     @if(!string.IsNullOrEmpty(ach.GameId))
                                     {
                                         <span class="ms-auto text-muted small">@ach.GameId</span>
@@ -249,7 +253,7 @@
 
                                 <tr>
                                     <td class="text-center align-middle">
-                                        <a asp-page="/MatchDetails" asp-route-id="@match.MatchDisplayId"><strong>@match.MatchDisplayId</strong></a>
+                                        <a asp-page="/Matches/Details" asp-route-id="@match.MatchDisplayId"><strong>@match.MatchDisplayId</strong></a>
                                         @if (match.StatsUrls != null && match.StatsUrls.Any())
                                         {
                                             <br />

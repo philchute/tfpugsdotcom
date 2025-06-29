@@ -111,7 +111,7 @@ namespace tfpugsdotcom.Pages
             DisplayAchievements = sortedAchievements.ToList();
 
             // Grouping for the view, now by game and then by tag
-            var groupedByGame = DisplayAchievements.GroupBy(a => a.GameId ?? "Server");
+            var groupedByGame = DisplayAchievements.GroupBy(a => a.GameId ?? "Global");
 
             foreach (var gameGroup in groupedByGame)
             {

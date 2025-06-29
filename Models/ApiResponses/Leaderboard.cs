@@ -51,6 +51,9 @@ namespace tfpugsdotcom.Models.ApiResponses
         [JsonPropertyName("avatar_url")]
         public string? AvatarUrl { get; set; }
 
+        [JsonPropertyName("name_color_hex")]
+        public string? NameColorHex { get; set; }
+
         [JsonPropertyName("elo")]
         public int Elo { get; set; }
 

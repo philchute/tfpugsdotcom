@@ -80,8 +80,8 @@
                     @foreach (var item in Model.ItemsToDisplay)
                     {
                         var link = Model.SelectedParticipantType == "team"
-                            ? $"/teams/{item.Id}"
-                            : $"/players/{item.Id}";
+                            ? $"/Team/{item.Id}"
+                            : $"/Players/{item.Id}";
                         <tr class="@(item.IsActive == true ? "" : "table-secondary text-muted")">
                             <td class="text-center">@(item.ActiveRank?.ToString() ?? "-")</td>
                             <td class="text-center">@(item.Rank?.ToString() ?? "-")</td>

@@ -147,6 +147,7 @@ namespace tfpugsdotcom.Pages
             {
                 ProfileErrorMessage = $"JSON exception fetching player profile: {ex.Message}";
                 _logger.LogError(ex, ProfileErrorMessage);
+                ProfileData = null;
             }
 
             // Task 3: Fetch Match History

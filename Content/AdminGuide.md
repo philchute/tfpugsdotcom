@@ -20,13 +20,16 @@ This guide is for TFpugs admins. It covers the information needed to manage the 
   * [Linux navigation](#linux-navigation)
   * [Server Configuration](#server-configuration)
 * [Bot Server](#bot-server)
+  * [View Logs for a Specific Service in Real-Time](#view-logs-for-a-specific-service-in-real-time)
+  * [View the Last N Lines of a Service's Log](#view-the-last-n-lines-of-a-services-log)
+  * [View All Errors since the last reboot](#view-all-errors-since-the-last-reboot)
+  * [Services List](#services-list)
+* [Obsolete tmux stuff](#obsolete-tmux-stuff)
   * [Attached to tmux session](#attached-to-tmux-session)
   * [TFCELO and NFOstats bots (old bot)](#tfcelo-and-nfostats-bots-old-bot)
   * [TFCELO_rewrite bot (new bot)](#tfcelo_rewrite-bot-new-bot)
   * [MySQL server (databases)](#mysql-server-databases)
 * [Website Info](#website-info)
-  * [Websites running on bot](#websites-running-on-bot)
-  * [Website Info](#website-info-1)
 * [Maps](#maps)
   * [League Map Pools](#league-map-pools)
   * [Pug Map Pools](#pug-map-pools)
@@ -45,6 +48,7 @@ This guide is for TFpugs admins. It covers the information needed to manage the 
   * [Test Log](#test-log)
   * [Events Cog](#events-cog)
   * [Leagues Cog](#leagues-cog)
+  * [Setup Interactive Panel](#setup-interactive-panel)
 * [Discord Server Boost info](#discord-server-boost-info)
 * [Game Servers](#game-servers)
   * [Metamod](#metamod)
@@ -210,7 +214,7 @@ If you are comfortable with linux text editing you can open them here within put
 
 ## Bot Server
 
-Bot are now ran by systemd services.
+Bots are now ran by systemd services.
 
 Process to move a bot to systemd:
 1. Stop the current process running in tmux.
@@ -248,6 +252,7 @@ This is useful for quickly seeing the most recent activity without getting a hug
 
 * newbot.service
   * python virtual environment for new bot
+  * this one is not actually running yet as development is still ongoing (6/28/2025)
 * oldbot.service
   * python virtual environment for old bot
   * previously ran in tmux via `source ~/virtualpy/bin/activate` and `sh run.sh`
@@ -338,7 +343,7 @@ Configuration occurs in three sequential layers:
 
 ### MySQL server (databases)
 
-MySQL server is holding the stats also on this server. access directly with the botserver account in tmux or remotely using the login details from the pinned message in discord.
+MySQL server is on this server. Access directly with the botserver account in tmux or remotely using the login details from the pinned message in discord using the command `mysql -u botserver -p`.
 
 ## Website Info
 
@@ -456,7 +461,8 @@ Example usage:
 
 ### Migrate Roles
 
-Not a normal process `/migrateroles sourceroleID destinationroleID (isDryRun) defaults true`  
+Not a normal process  
+`/migrateroles sourceroleID destinationroleID (isDryRun) defaults true`  
 * It defers the response ephemerally.   
 * Checks that source and destination roles are not the same.  
 * Retrieves all members from the guild who have the source_role.  
@@ -467,27 +473,39 @@ Not a normal process `/migrateroles sourceroleID destinationroleID (isDryRun) de
 * It keeps track of members who would get the role (dry run), who actually got the role (execution), and who already had the destination role.
 * Error handling is included for discord.Forbidden (bot lacks permissions) and discord.HTTPException during role addition.
 
+
+### Setup Interactive Panel
+
+Not a normal process.  
+Creates interactive panel based on config setup.  
+`/setupinteractivepanel panelname channel`
+
+
 ### Process Log
 
 `/processlog logfilename gameid [matchid]`
 
+
 ### Test Log 
 
 `/testlog logfilename gameid [matchid]`
+
 
 ### Events Cog
 
 The events cog creates events (tournaments or league seasons) for teams to join. 
 Use the event-template.json to fill in information about the event.
 Use filezilla to place the json file in the bot's /src/data/imports/ directory.
-Use the command /importevent to import the event into the bot.
+Use the command `/importevent` to import the event into the bot.
 At the scheduled registration start time the bot will post an event which allows team captains to join.
 At the scheduled registration close time the bot will post the results of the registration. 
 At the scheduled event start time the bot will begin the tournament or league season. 
 
+
 ### Leagues Cog
 
 Todo add info
+
 
 ## Discord Server Boost info
 <a href='https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ'>https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ</a>
@@ -508,10 +526,10 @@ Todo add info
   * 384 kbps audio
 
 
-
 ## Game Servers
 
 Game servers are now held in the 'servers' SQL table. We could write a bot function to !addserver or !editserver but that doesn't seem worth it right now. Servers are added directly into MYSQL when needed.
+
 
 ### Metamod
 
@@ -521,12 +539,14 @@ View the status of Metamod plugs by typing in the game server console `meta list
 * Rechecker - used for file validation, reHLDS project
 * AMXModX
 
+
 ### AMXmodX
 
 View the status of AMXmodX plugins by typing in the game server console `amxx plugins`
 To make changes, download the compiler / AMXStudio <a href="https://www.amxmodx.org/">https://www.amxmodx.org/</a>
 There's a VScode extension available to run that compiler from there.
 Compile the .sma source file to .amxx file and then place in */home/tfcserver/serverfiles/tfc/addons/amxmodx/plugins*
+
 
 ### Base AMXmodX plugins in use
 
@@ -548,6 +568,7 @@ Compile the .sma source file to .amxx file and then place in */home/tfcserver/se
 | pluginmenu.amxx | Plugin Menu |
 | statscfg.amxx | Stats Configuration |
 | timeleft.amxx | TimeLeft |
+
 
 ### Custom AMXmodX plugins in use
 

@@ -6,7 +6,7 @@ namespace tfpugsdotcom.Models.ApiResponses
 {
     public class ApiTeam
     {
-        [JsonPropertyName("team_id")]
+        [JsonPropertyName("id")]
         public string TeamId { get; set; } = string.Empty;
 
         [JsonPropertyName("game_id")]

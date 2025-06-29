@@ -58,7 +58,7 @@ namespace tfpugsdotcom.Models.ApiResponses
         public DateTime MatchEndTime { get; set; }
 
         [JsonPropertyName("duration_seconds")]
-        public int DurationSeconds { get; set; }
+        public int? DurationSeconds { get; set; }
 
         [JsonPropertyName("is_moneyball")]
         public bool IsMoneyball { get; set; }
@@ -91,7 +91,7 @@ namespace tfpugsdotcom.Models.ApiResponses
     public class TopPlayerEntry
     {
         [JsonPropertyName("playerId")]
-        public int PlayerId { get; set; }
+        public int? PlayerId { get; set; }
 
         [JsonPropertyName("playerName")]
         public string PlayerName { get; set; } = string.Empty;
@@ -100,13 +100,13 @@ namespace tfpugsdotcom.Models.ApiResponses
         public string SteamId { get; set; } = string.Empty;
 
         [JsonPropertyName("points")]
-        public double Points { get; set; }
+        public double? Points { get; set; }
     }
 
     public class SinglePlayerAward
     {
         [JsonPropertyName("playerId")]
-        public int PlayerId { get; set; }
+        public int? PlayerId { get; set; }
 
         [JsonPropertyName("playerName")]
         public string PlayerName { get; set; } = string.Empty;

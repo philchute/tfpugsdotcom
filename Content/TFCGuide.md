@@ -73,7 +73,7 @@ Please ask your game runner or an admin if you have any questions about what is 
 
 ### League Matches:
 * Any spectators should use HLTV rather than in-game spectator viewing
-* Players should record a personal demo using the command "record filename". Use the command "stop" if you need to stop recording one file to record another. Players should retain these demos and provide them if requested from an admin.
+* Players should record a personal demo using the console command `record filename`. Use the console command `stop` if you need to stop recording one file to record another. Players should retain these demos and provide them if requested from an admin.
 * Teams are allowed substitutions between halves or overtime periods. Having an additional player on standby is a good way to insure against a player having a connection or irl issue.
 * No mm1 (all-chat) during the match. Conduct yourself professionally. This is our highest form of competition and your behavior and sportsmanship should reflect that. 
 * Report scores and upload logs within 24 hours if playing on your own server.

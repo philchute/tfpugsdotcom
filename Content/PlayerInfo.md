@@ -7,7 +7,7 @@
 * [Queues and Matches](#queues-and-matches)
 * [Bet Shop and Items](#bet-shop-and-items)
 * [Conc and Climb maps](#conc-and-climb-maps)
-* [1v1s and Tournaments](#1v1s-and-tournaments)
+* [Tournaments and 1v1s](#tournaments-and-1v1s)
 * [Teams and Leagues](#teams-and-leagues)
 * [Conclusion](#conclusion)
 ---
@@ -34,12 +34,13 @@ Use the buttons in the role selection channel to select which queues you want to
 
 ## Profiles and Avatars
 
-Your profile shows your previous matches, rankings, points, achievements, and your selected avatar. Players can view their own profile with the command `/viewprofile` or view someone else's profile with the command `/viewprofile @username`. Players can view their rank history with the command `/rank` or view some else's rank history with the command `/rank @username`. View the top ranked players on the [Leaderboards page](/Leaderboards) or with the bot command `/top`. View information about all the available achievements on the [Achievements page](/Achievements) or with the bot command `/viewachievements`. Earn achievements and complete other challenges to unlock new avatars. Select your displayed avatar with the command `/avatar`. If you would prefer your rank and achievements not be publicly visible on discord or the website, you can toggle your privacy settings with the command `/private`. Register your steam ID with the bot with the command `/registersteamid STEAM_1:1:111111` to receive achievements from in-game events or complete in league matches.
+Your profile shows your previous matches, rankings, points, achievements, and your selected avatar. Players can view their own profile with the command `/viewprofile` or view someone else's profile with the command `/viewprofile @username`. Players can view their rank history with the command `/rank` or view some else's rank history with the command `/rank @username`. View the top ranked players on the [Leaderboards page](/Leaderboards) or with the bot command `/top`. View information about all the available achievements on the [Achievements page](/Achievements) or with the bot command `/viewachievements`. Earn achievements and complete other challenges to unlock new avatars and colors. Select your displayed avatar with the command `/avatar` and set your color with the command `/setcolor`. If you would prefer your rank and achievements not be publicly visible on discord or the website, you can toggle your privacy settings with the command `/private`.  
+Register your steam ID with the bot with the command `/registersteamid STEAM_1:1:111111` to receive achievements from in-game events or compete in league matches.
 
 
 ## Queues and Matches
 
-To play a pickup match you must join a pickup channel for that game or variant. When a game is being formed you will see other users adding to that queue. Add yourself to the queue with the command `/add`
+To play a pickup match you must join a pickup channel for that game or variant. When a game is being formed you will see other users adding to that queue. Add yourself to the queue with the command `/add` or `!add` or `++` or `!join`.
 
 When the match forms you will be assigned a team and you will receive match information, like which server to join and what the password is. Join the voice channel for your team and speak with your teammates. If you are new to the game let them know what classes or roles you are comfortable playing and the more experienced teammates will fill in the rest of what is needed. 
 
@@ -58,22 +59,19 @@ The current map pool for a particular format can be viewed using the command `/m
 
 ## Bet Shop and Items
 
-The bot will award points for participating in matches and other events.
+The bot will award gems and xp for participating in matches and other events.
 
-The top points holders can be viewed on the [Leaderboards page](/Leaderboards) or in discord with the `/viewballers` command.
+The top gem holders can be viewed on the [Leaderboards page](/Leaderboards) or in discord with the `/topgems` command.  
+The top xp holders can be viewed on the [Leaderboards page](/Leaderboards) or in discord with the `/topxp` command.
 
-Points can be spent on items, including items that will affect the matches.
+Gems can be spent on items, including items that will affect the matches.  
+View the items available for purchase on the [Shop Items page](/ShopItems) or in discord with the `/viewitems` command.  
+Spend your gems in a PUG channel before the match begins with the `/buy item` command.
 
-View the items available for purchase on the [Shop Items page](/ShopItems) or in discord with the `/viewitems` command.
-
-Spend your points in a PUG channel before the match begins with the `/buy item` command.
-
-There is an opportunity to bet points on matches for 3 minutes following the voting and team assignment as the match is starting up.
-
-Bets will default to betting on yourself using the command `/bet 300` if you are in the match; you cannot bet against yourself.
-
-Specify the team number to bet on with `/bet 100 2` to bet on a match you are not in.
-
+There is an opportunity to bet gems on matches for 3 minutes following the voting and team assignment as the match is starting up.  
+Bets will default to betting on yourself using the command `/bet 300` if you are in the match.  
+You cannot bet against your team in a match you are in.  
+Specify the team number to bet on with `/bet 100 2` to bet on a match you are not in.  
 Bets will be paid out at the end of the match or refunded in the event of a tie.  
 
 
@@ -88,7 +86,9 @@ Watch the race channel for the weekly contest map.
 > *Currently there are no partnered skill servers. We are planning to change this soon.*
 
 
-## 1v1s and Tournaments
+## Tournaments and 1v1s
+
+> *These features are currently in development, 1v1 servers and queues are coming soon.*
 
 1v1 queues typically form small 4 person tournaments where the winners and losers of round 1 then play each other in a Finals and 3rd place match.
 
@@ -104,6 +104,8 @@ Use the command `/tournamentinfo` to view information about a completed tourname
 
 
 ## Teams and Leagues
+
+> *These features are currently in development, teams and leagues are coming soon.*
 
 Pre-formed teams can join seasonal leagues, or challenge other teams to a challenge match.
 

@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-06-22",
+    "is_pinned": true,
+    "title": "Welcome to tfpugs.com!",
+    "content": "tfpugs.com is your home for Team Fortress Classic 4v4 pickup games. <a href=\"https://discord.gg/MmZeyPUH6q\" target=\"_blank\" rel=\"noopener noreferrer\">Join the Discord Server</a> for more information and to join pickup games. <br/><br/> This website is currently in a <b>PREVIEW</b> state as we are in the process of rebuilding our pug tools. Live data including recent matches and rankings are not yet updating live to the site until we switch entirely to the new bot. Please reach out if you have any issues with this site, design comments, or suggestions for new features."
+  },
+  {
+    "timestamp": "2025-06-28",
+    "is_pinned": false,
+    "title": "June Roadmap",
+    "content": "Short term (next 2 weeks):<ul><li>New team creation system and 4GL season 17 underway</li><li>PUGs switched to new bot</li><li>Website finalized with live data</li></ul>Medium Term (next month or two):<ul><li>Designated 1v1 servers added for TFC</li><li>Mini Tournaments going for 1v1 (Can add other games after that, like Ricochet and HLDM)</li><li>Latin American servers and queue added</li><li>Achievements fully automated</li><li>AvD nights, Hunted matches, and more</ul>Long Term (later this year): <ul><li>More servers in more regions</li><li>More leagues, formats, and games supported in the discord.</li><li>More features following, check back for updates.</li></ul>"
+  },
+  {
+    "timestamp": "2025-06-28",
+    "is_pinned": false,
+    "title": "New everything",
+    "content": "Lots of new stuff lately. The new bot is still in progress, got the map upload functions going now, and the role selection system working. This new website is mostly up, including this new news feed, and there's still a few pages to be added in over the next few weeks. Even more new achievements have been added, and I just added name color unlocking with some of them. Let me know what you think of the changes!</p>"
+  }
+] 
